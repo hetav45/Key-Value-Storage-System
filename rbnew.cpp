@@ -8,6 +8,8 @@ struct Node
     Node *parent;
     Node *left;
     Node *right;
+    int leftNo;
+    int rightNo;
     int color;
 };
 typedef Node *NodePtr;
@@ -21,6 +23,8 @@ private:
         node->parent = parent;
         node->left = nullptr;
         node->right = nullptr;
+        node->leftNo = 0;
+        node->rightNo = 0;
         node->color = 0;
     }
     void preOrderHelper(NodePtr node)
@@ -309,7 +313,7 @@ private:
                 indent += "|  ";
             }
             string sColor = root->color ? "RED" : "BLACK";
-            cout << root->data << "(" << sColor << ")  " << root->value << endl;
+            cout << root->data << "(" << sColor << ")  " << root->leftNo << "   " << root->rightNo << endl;
             printHelper(root->left, indent, false);
             printHelper(root->right, indent, true);
         }
@@ -388,6 +392,7 @@ public:
     {
         NodePtr y = x->right;
         x->right = y->left;
+        x->rightNo = y->leftNo;
         if (y->left != TNULL)
         {
             y->left->parent = x;
@@ -406,12 +411,14 @@ public:
             x->parent->right = y;
         }
         y->left = x;
+        y->leftNo = x->leftNo + x->rightNo + 1;
         x->parent = y;
     }
     void rightRotate(NodePtr x)
     {
         NodePtr y = x->left;
         x->left = y->right;
+        x->leftNo = y->rightNo;
         if (y->right != TNULL)
         {
             y->right->parent = x;
@@ -430,6 +437,7 @@ public:
             x->parent->left = y;
         }
         y->right = x;
+        y->rightNo = x->leftNo + 1 + x->rightNo;
         x->parent = y;
     }
     void insert(char *key, char *value)
@@ -441,6 +449,8 @@ public:
         node->left = TNULL;
         node->right = TNULL;
         node->color = 1;
+        node->leftNo = 0;
+        node->rightNo = 0;
         NodePtr y = nullptr;
         NodePtr x = this->root;
         while (x != TNULL)
@@ -448,10 +458,16 @@ public:
             y = x;
             if (strcmp(node->data, x->data) < 0)
             {
+                x->leftNo += 1;
                 x = x->left;
+            }
+            else if (strcmp(node->data, x->data) == 0)
+            {
+                break;
             }
             else
             {
+                x->rightNo += 1;
                 x = x->right;
             }
         }
@@ -531,7 +547,7 @@ int main()
         b = (char *)malloc(256 * sizeof(char));
         scanf("%s", b);
         bst[code(a[0])][strlen(a) - 1].insert(a, b);
-        printf("Value is %s\n",bst[code(a[0])][strlen(a) - 1].search(a));
+        // printf("Value is %s\n", bst[code(a[0])][strlen(a) - 1].search(a));
     }
     clock_gettime(CLOCK_MONOTONIC, &end);
     double tdiff = (end.tv_sec - start.tv_sec) + 1e-9 * (end.tv_nsec - start.tv_nsec);
