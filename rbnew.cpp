@@ -18,7 +18,6 @@ private:
     NodePtr TNULL;
     void initializeNULLNode(NodePtr node, NodePtr parent)
     {
-        // node->data[0] = "\0";
         node->parent = parent;
         node->left = nullptr;
         node->right = nullptr;
@@ -148,6 +147,33 @@ private:
             u->parent->right = v;
         }
         v->parent = u->parent;
+    }
+    char *searchHelper(NodePtr node, char *key)
+    {
+        NodePtr z = TNULL;
+        NodePtr x, y;
+        while (node != TNULL)
+        {
+            if (strcmp(node->data, key) == 0)
+            {
+                z = node;
+            }
+            if (strcmp(node->data, key) <= 0)
+            {
+                node = node->right;
+            }
+            else
+            {
+                node = node->left;
+            }
+        }
+        if (z == TNULL)
+        {
+            cout << "Key not found in the tree" << endl;
+            return NULL;
+        }
+        y = z;
+        return y->value;
     }
     void deleteNodeHelper(NodePtr node, char *key)
     {
@@ -283,7 +309,7 @@ private:
                 indent += "|  ";
             }
             string sColor = root->color ? "RED" : "BLACK";
-            cout << root->data << "(" << sColor << ")" << endl;
+            cout << root->data << "(" << sColor << ")  " << root->value << endl;
             printHelper(root->left, indent, false);
             printHelper(root->right, indent, true);
         }
@@ -406,7 +432,7 @@ public:
         y->right = x;
         x->parent = y;
     }
-    void insert(char *key,char *value)
+    void insert(char *key, char *value)
     {
         NodePtr node = new Node;
         node->parent = nullptr;
@@ -438,6 +464,10 @@ public:
         {
             y->left = node;
         }
+        else if (strcmp(node->data, y->data) == 0)
+        {
+            strcpy(y->value, value);
+        }
         else
         {
             y->right = node;
@@ -460,6 +490,10 @@ public:
     void deleteNode(char *data)
     {
         deleteNodeHelper(this->root, data);
+    }
+    char *search(char *key)
+    {
+        return searchHelper(this->root, key);
     }
     void printTree()
     {
@@ -489,17 +523,25 @@ int main()
     RedBlackTree bst[52][64];
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC, &start);
-    
+
     for (int i = 0; i < n; i++)
     {
         a = (char *)malloc(64 * sizeof(char));
         scanf("%s", a);
         b = (char *)malloc(256 * sizeof(char));
-        scanf("%s",b);
-        bst[code(a[0])][strlen(a) - 1].insert(a,b);
+        scanf("%s", b);
+        bst[code(a[0])][strlen(a) - 1].insert(a, b);
+        printf("Value is %s\n",bst[code(a[0])][strlen(a) - 1].search(a));
     }
     clock_gettime(CLOCK_MONOTONIC, &end);
     double tdiff = (end.tv_sec - start.tv_sec) + 1e-9 * (end.tv_nsec - start.tv_nsec);
     printf("time %f\n", tdiff);
+    for (int i = 0; i < 52; i++)
+    {
+        for (int j = 0; j < 64; j++)
+        {
+            bst[i][j].printTree();
+        }
+    }
     return 0;
 }
