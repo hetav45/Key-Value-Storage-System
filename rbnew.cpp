@@ -566,7 +566,7 @@ public:
     }
     void deleteN(int N)
     {
-        deleteNodeHelper(this->root,getNHelper(this->root,N));
+        deleteNodeHelper(this->root, getNHelper(this->root, N));
     }
 };
 int code(char c)
@@ -574,11 +574,11 @@ int code(char c)
     int val = (int)(c);
     if (val > 64 && val < 91)
     {
-        return (val - 65) * 2 + 1;
+        return (val - 65);
     }
     else
     {
-        return (val - 97) * 2;
+        return (val - 97) + 26;
     }
 }
 int main()
@@ -586,7 +586,7 @@ int main()
     char *a, *b;
     int n;
     scanf("%d", &n);
-    RedBlackTree bst[52][64];
+    RedBlackTree bst[52][53];
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC, &start);
 
@@ -596,15 +596,24 @@ int main()
         scanf("%s", a);
         b = (char *)malloc(256 * sizeof(char));
         scanf("%s", b);
-        bst[code(a[0])][strlen(a) - 1].insert(a, b);
-        // printf("Value is %s\n", bst[code(a[0])][strlen(a) - 1].search(a));
+        if (a[1]!='\0')
+        {
+            bst[code(a[0])][code(a[1]) + 1].insert(a, b);
+            // bst[code(a[0])][code(a[1]) + 1].printTree();
+        }
+        else
+        {
+            bst[code(a[0])][0].insert(a, b);
+            // bst[code(a[0])][0].printTree();
+            // printf("%s\n",bst[code(a[0])][0].search(a));
+        }
     }
     clock_gettime(CLOCK_MONOTONIC, &end);
     double tdiff = (end.tv_sec - start.tv_sec) + 1e-9 * (end.tv_nsec - start.tv_nsec);
     printf("time %f\n", tdiff);
     for (int i = 0; i < 52; i++)
     {
-        for (int j = 0; j < 64; j++)
+        for (int j = 0; j < 53; j++)
         {
             bst[i][j].printTree();
         }
@@ -618,7 +627,7 @@ int main()
         for (int i = 0; i < 52; i++)
         {
             bool flag = false;
-            for (int j = 0; j < 64; j++)
+            for (int j = 0; j < 53; j++)
             {
                 int number;
                 number = bst[i][j].getNumber();
