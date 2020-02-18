@@ -323,6 +323,30 @@ private:
             printHelper(root->right, indent, true);
         }
     }
+    char *getNHelper(NodePtr root, int k)
+    {
+        char *ret = (char *)malloc(sizeof(char) * 256);
+
+        while (root != TNULL)
+        {
+            if ((root->leftNo + 1) == k)
+            {
+                strcpy(ret, root->data);
+                break;
+            }
+            else if (k > root->leftNo)
+            {
+                k = k - (root->leftNo + 1);
+                root = root->right;
+            }
+            else
+            {
+                root = root->left;
+            }
+        }
+
+        return ret;
+    }
 
 public:
     RedBlackTree()
@@ -524,6 +548,26 @@ public:
             printHelper(this->root, "", true);
         }
     }
+    int getNumber()
+    {
+        if (root != TNULL)
+        {
+            return root->leftNo + root->rightNo + 1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    char *getN(int N)
+    {
+
+        return getNHelper(this->root, N);
+    }
+    void deleteN(int N)
+    {
+        deleteNodeHelper(this->root,getNHelper(this->root,N));
+    }
 };
 int code(char c)
 {
@@ -565,19 +609,35 @@ int main()
             bst[i][j].printTree();
         }
     }
+
     while (true)
     {
-        a = (char *)malloc(64 * sizeof(char));
-        scanf("%s", a);
-        bst[code(a[0])][strlen(a)-1].deleteNode(a);
+        int N;
+        scanf("%d", &N);
+        int p, q;
         for (int i = 0; i < 52; i++)
         {
+            bool flag = false;
             for (int j = 0; j < 64; j++)
             {
-                bst[i][j].printTree();
+                int number;
+                number = bst[i][j].getNumber();
+                p = i;
+                q = j;
+                if (N - number <= 0)
+                {
+                    flag = true;
+                    break;
+                }
+                N -= number;
+            }
+            if (flag == true)
+            {
+                break;
             }
         }
+        bst[p][q].deleteN(N);
+        bst[p][q].printTree();
     }
-
     return 0;
 }
