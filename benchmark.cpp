@@ -130,7 +130,7 @@ void *myThreadFun(void *vargp)
 
 int main()
 {
-	for (int i = 0; i < 100000; i++)
+	for (int i = 0; i < 10; i++)
 	{
 		int k = rand() % 64 + 1;
 		int v = rand() % 256 + 1;
@@ -149,11 +149,12 @@ int main()
 
 	bool incorrect = false;
 
-	for (int i = 0; i < 10000; i++)
+	for (int i = 0; i < 10; i++)
 	{
 		int x = rand() % 3;
 		if (x == 0)
 		{
+			
 			Slice key;
 			// key.data = (char *)malloc(sizeof(char) * 64);
 			strcpy(key.data,random_key(10));
@@ -161,6 +162,7 @@ int main()
 			// value.data = (char *)malloc(sizeof(char) * 256);
 			// string k = random_key(10);
 			bool ans = kv.get(&key, &value);
+			cout << "get " << key.data << endl;
 			map<string, string>::iterator itr = db.find(key.data);
 			if ((ans == false && itr != db.end()) || (ans == true && itr == db.end()))
 			{
@@ -184,13 +186,20 @@ int main()
 			// value1.data = (char *)malloc(sizeof(char) * 256);
 
 			db.insert(pair<string, string>(key.data, value.data));
+			cout << "get " << key.data << endl;
+
 			bool check1 = kv.get(&key, &value1);
+			cout << "put " << key.data << endl;
+
 			bool ans = kv.put(&key, &value);
+			cout << "get " << key.data << endl;
+			
 			bool check2 = kv.get(&key, &value1);
 			db_size++;
 			if (check2 == false || check1 != ans)
 			{
-				printf("key=%s Check1=%d ans=%d check2=%d\n",key.data,check1,ans,check2);
+				printf("x=%d\n",x);
+				// printf("key=%s Check1=%d ans=%d check2=%d\n",key.data,check1,ans,check2);
 				incorrect = true;
 			}
 			// free(value.data);
@@ -210,16 +219,20 @@ int main()
 			// key.data = (char *)malloc(sizeof(char) * itr->first.size());
 			// string key = itr->first;
 			strcpy(key.data, itr->first.c_str());
+			cout << "delete " << key.data << endl;
+
 			bool check = kv.del(&key);
 			db_size--;
 			db.erase(itr);
 			Slice value;
 			// value.data = (char *)malloc(sizeof(char) * 256);
+			cout << "get " << key.data << endl;
 
 			bool check2 = kv.get(&key, &value);
 			if (check2 == true)
 			{
-				printf("x=%d key=%s\n",x,key.data);
+				// printf("x=%d key=%s\n",x,key.data);
+				printf("x=%d\n",x);
 				
 				incorrect = true;
 			}
@@ -241,8 +254,9 @@ int main()
 				itr++;
 			if (strcmp(key.data,itr->first.c_str())!=0 || strcmp(value.data,itr->second.c_str())!=0)
 			{
+				// printf("x=%d\n",x);
 				
-				printf("%s %s %s %s\n",key.data,itr->first.c_str(),value.data,itr->second.c_str());
+				printf("key = %s   ans = %s\n",key.data,itr->first.c_str());
 				incorrect = true;
 			}
 			// printf("%d\n",incorrect);
