@@ -327,19 +327,19 @@ private:
     {
         if (root != TNULL)
         {
-            // cout << indent;
+            cout << indent;
             if (last)
             {
-                // cout << "R----";
+                cout << "R----";
                 indent += "   ";
             }
             else
             {
-                // cout << "L----";
+                cout << "L----";
                 indent += "|  ";
             }
             string sColor = root->color ? "RED" : "BLACK";
-            // cout << root->data << "(" << sColor << ")  " << root->leftNo << "   " << root->rightNo << endl;
+            cout << root->data << "(" << sColor << ")  " << root->leftNo << "   " << root->rightNo << endl;
             printHelper(root->left, indent, false);
             printHelper(root->right, indent, true);
         }
@@ -498,7 +498,7 @@ public:
             index1 = code(key->data[0]);
             index2 = 0;
         }
-
+        printf("%d %d\n",index1,index2);
         NodePtr node = new Node;
         node->parent = nullptr;
         strcpy(node->data, key->data);
@@ -540,6 +540,7 @@ public:
         else if (strcmp(node->data, y->data) == 0)
         {
             strcpy(y->value, value->data);
+            printTree(index1, index2);
             return true;
         }
         else
@@ -549,13 +550,18 @@ public:
         if (node->parent == nullptr)
         {
             node->color = 0;
+            printTree(index1, index2);
+
             return false;
         }
         if (node->parent->parent == nullptr)
         {
+            printTree(index1, index2);
+
             return false;
         }
         insertFix(node, index1, index2);
+        printTree(index1, index2);
         return false;
     }
 
@@ -570,11 +576,13 @@ public:
     {
         int index1 = code(key->data[0]);
         int index2 = code(key->data[1]) + 1;
-
-        char *temp = searchHelper(this->root[index1][index2], key->data);
-        if (temp == NULL)
+        printTree(index1, index2);
+        // char *temp = searchHelper(this->root[index1][index2], key->data);
+        NodePtr temp = searchTreeHelper(this->root[index1][index2], key->data);
+        printf("%s\n", temp->value);
+        if (temp == TNULL)
             return false;
-        strcpy(value->data, temp);
+        strcpy(value->data, temp->value);
         // value->size = strlen(value->data);
 
         // if (value->data[0]==0)
@@ -693,6 +701,74 @@ public:
         }
     }
 };
+int main()
+{
+    Slice *a = (Slice *)malloc(sizeof(Slice));
+    Slice *b = (Slice *)malloc(sizeof(Slice));
+
+    // a->data = (char *)malloc(sizeof(char)*64);
+    // b->data = (char *)malloc(sizeof(char)*256);
+
+    RedBlackTree kv;
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+
+    char op[10];
+
+    for (; 1;)
+    {
+        scanf("%s", op);
+
+        if (strcmp(op, "put") == 0)
+        {
+            scanf("%s", a->data);
+            scanf("%s", b->data);
+            printf("%s %s\n", a->data, b->data);
+            bool ret = kv.put(a, b);
+            printf("ret - %d\n", ret);
+        }
+        else if (strcmp(op, "get") == 0)
+        {
+            scanf("%s", a->data);
+            bool ret = kv.get(a, b);
+            // printf("%d\n", ret);
+            fflush(stdout);
+            if (!ret)
+                printf("ret - %d\n", ret);
+            else
+                printf("ret - %d\tval - %s\n", ret, b->data);
+        }
+        else if (strcmp(op, "getn") == 0)
+        {
+            int index;
+            scanf("%d", &index);
+            bool ret = kv.get(index, a, b);
+            if (!ret)
+                printf("ret - %d\n", ret);
+            else
+                printf("ret - %d\tkey - %s\tval - %s\n", ret, a->data, b->data);
+        }
+        else if (strcmp(op, "del") == 0)
+        {
+            scanf("%s", a->data);
+            bool ret = kv.del(a);
+            printf("ret - %d\n", ret);
+        }
+        else if (strcmp(op, "deln") == 0)
+        {
+            int index;
+            scanf("%d", &index);
+            bool ret = kv.del(index);
+            printf("ret - %d\n", ret);
+        }
+        else if (strcmp(op, "exit") == 0)
+        {
+            break;
+        }
+    }
+
+    return 0;
+}
 
 // int main()
 // {
