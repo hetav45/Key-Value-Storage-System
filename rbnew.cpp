@@ -776,11 +776,36 @@ public:
 };
 // int main()
 // {
+//     RedBlackTree bst;
+//     // int n;
+//     // cin >> n;
+//     // char key[64];
+//     // char value[256];
+//     // Slice key,value;
+//     Slice *key = new Slice;
+//     Slice *value = new Slice;
+//     key->data = new char[64];
+//     value->data = new char[256];
+//     // clock_gettime(CLOCK_MONOTONIC, &start);
+
+//     for (int i = 0; i < 10000000; i++)
+//     {
+//         cin >> key->data >> value->data;
+//         bst.put(*key, *value);
+//     }
+//     //bst.printTree();
+//     // cout << endl
+//     //      << "After deleting" << endl;
+//     // //bst.deleteNode(13);
+//     // bst.printTree();
+// }
+// int main()
+// {
 //     Slice *a = (Slice *)malloc(sizeof(Slice));
 //     Slice *b = (Slice *)malloc(sizeof(Slice));
 
-//     // a->data = (char *)malloc(sizeof(char)*64);
-//     // b->data = (char *)malloc(sizeof(char)*256);
+//     a->data = (char *)malloc(sizeof(char)*64);
+//     b->data = (char *)malloc(sizeof(char)*256);
 
 //     RedBlackTree kv;
 //     struct timespec start, end;
@@ -797,13 +822,13 @@ public:
 //             scanf("%s", a->data);
 //             scanf("%s", b->data);
 //             // printf("%s %s\n", a->data, b->data);
-//             bool ret = kv.put(a, b);
+//             bool ret = kv.put(*a, *b);
 //             printf("ret - %d\n", ret);
 //         }
 //         else if (strcmp(op, "get") == 0)
 //         {
 //             scanf("%s", a->data);
-//             bool ret = kv.get(a, b);
+//             bool ret = kv.get(*a, *b);
 //             // printf("%d\n", ret);
 //             fflush(stdout);
 //             if (!ret)
@@ -815,7 +840,7 @@ public:
 //         {
 //             int index;
 //             scanf("%d", &index);
-//             bool ret = kv.get(index, a, b);
+//             bool ret = kv.get(index, *a, *b);
 //             if (!ret)
 //                 printf("ret - %d\n", ret);
 //             else
@@ -824,7 +849,7 @@ public:
 //         else if (strcmp(op, "del") == 0)
 //         {
 //             scanf("%s", a->data);
-//             bool ret = kv.del(a);
+//             bool ret = kv.del(*a);
 //             printf("ret - %d\n", ret);
 //         }
 //         else if (strcmp(op, "deln") == 0)
