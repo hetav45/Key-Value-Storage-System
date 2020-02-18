@@ -188,13 +188,16 @@ private:
             if (strcmp(node->data, key) == 0)
             {
                 z = node;
+                break;
             }
             if (strcmp(node->data, key) <= 0)
             {
+                node->rightNo -= 1;
                 node = node->right;
             }
             else
             {
+                node->leftNo -= 1;
                 node = node->left;
             }
         }
@@ -228,10 +231,12 @@ private:
             {
                 rbTransplant(y, y->right);
                 y->right = z->right;
+                y->rightNo = z->rightNo - 1;
                 y->right->parent = y;
             }
             rbTransplant(z, y);
             y->left = z->left;
+            y->leftNo = z->leftNo;
             y->left->parent = y;
             y->color = z->color;
         }
@@ -348,6 +353,7 @@ public:
     {
         while (node->left != TNULL)
         {
+            node->leftNo -= 1;
             node = node->left;
         }
         return node;
@@ -559,5 +565,19 @@ int main()
             bst[i][j].printTree();
         }
     }
+    while (true)
+    {
+        a = (char *)malloc(64 * sizeof(char));
+        scanf("%s", a);
+        bst[code(a[0])][strlen(a)-1].deleteNode(a);
+        for (int i = 0; i < 52; i++)
+        {
+            for (int j = 0; j < 64; j++)
+            {
+                bst[i][j].printTree();
+            }
+        }
+    }
+
     return 0;
 }
