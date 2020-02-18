@@ -4,7 +4,11 @@
 #include <time.h>
 #include "kvStore.cpp"
 using namespace std;
-
+struct Slice
+{
+    uint8_t size;
+    char *data;
+};
 string random_key(int stringLength){
 	string key = "";
 	string letters = "";
@@ -47,6 +51,7 @@ void *myThreadFun(void *vargp)
 			int x = rand()%5;
 			if(x==0)
 			{
+				splice
 				string k = random_key(10);
 				bool ans = kv.get(k);
 			}
@@ -54,6 +59,7 @@ void *myThreadFun(void *vargp)
 			{
 				int k = rand()%64 + 1;
 				int v = rand()%256 + 1;
+
 				string key = random_key(k);
 				string value = random_value(v);
 				bool ans = kv.put(key,value);

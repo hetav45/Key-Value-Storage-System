@@ -608,7 +608,7 @@ public:
             flag = false;
             for (int j = 0; j < 53; j++)
             {
-                int number=0;
+                int number = 0;
                 if (this->root[i][j] != TNULL)
                 {
                     number = this->root[i][j]->leftNo + this->root[i][j]->rightNo + 1;
@@ -628,7 +628,7 @@ public:
                 break;
             }
         }
-        if(flag==false)
+        if (flag == false)
         {
             return false;
         }
@@ -637,17 +637,17 @@ public:
         // printf("ind 1 %d ind 2 %d \n",index1,index2);
         // pair<char *, char *> *val = getNHelper(this->root[index1][index2], N);
         // printf("root check %s\n",this->root[index1][index2]->data);
-        NodePtr node = getTreeHelper(this->root[index1][index2],N); 
+        NodePtr node = getTreeHelper(this->root[index1][index2], N);
 
         key->size = strlen(node->data);
         key->data = (char *)malloc(sizeof(char) * key->size);
-        strcpy(key->data,node->data);
+        strcpy(key->data, node->data);
         value->size = strlen(node->value);
         value->data = (char *)malloc(sizeof(char) * value->size);
         // value->data = val->second;
-        strcpy(value->data,node->value);
+        strcpy(value->data, node->value);
         // printf("final %s\n",root[26][27]->data);
-        
+
         if (key->data)
         {
             return true;
@@ -666,7 +666,7 @@ public:
             bool flag = false;
             for (int j = 0; j < 53; j++)
             {
-                int number=0;
+                int number = 0;
                 if (root[i][j] != TNULL)
                 {
                     number = root[i][j]->leftNo + root[i][j]->rightNo + 1;
@@ -685,8 +685,8 @@ public:
                 break;
             }
         }
-        NodePtr node=getTreeHelper(this->root[index1][index2],N);
-        printf("\n\n\n%s\n\n\n",node->data);
+        NodePtr node = getTreeHelper(this->root[index1][index2], N);
+        printf("\n\n\n%s\n\n\n", node->data);
         return deleteNodeHelper(this->root[index1][index2], node->data, index1, index2);
     }
     int code(char c)
@@ -732,17 +732,17 @@ int main()
         Slice *value = (Slice *)malloc(sizeof(Slice));
         int N;
         // scanf("%d", &N);
-        key->data=(char*)malloc(sizeof(char)*64);
-        scanf("%s",key->data);
+        key->data = (char *)malloc(sizeof(char) * 64);
+        scanf("%s", key->data);
         // int N1=N;
-        kv.get( key, value);
+        kv.get(key, value);
         printf("key=%s value=%s n=%d\n", key->data, value->data, N);
         // kv.printTree(26,27);
         // kv.get(N, key, value);
         // printf("key=%s value=%s n=%d\n", key->data, value->data, N);
 
         printf("%d\n", kv.del(key));
-        kv.printTree(26,27);
+        kv.printTree(26, 27);
     }
     return 0;
 }
