@@ -73,6 +73,7 @@ private:
     }
     NodePtr getTreeHelper(NodePtr node, int N)
     {
+        // printf("N = %d left = %d right = %d\n",N,node->leftNo,node->rightNo);
         if (node == TNULL || ((node->leftNo + 1) == N))
         {
             return node;
@@ -267,7 +268,7 @@ private:
             {
                 deleteFix(x, index1, index2);
             }
-            printTree(index1,index2);
+            // printTree(index1,index2);
             return true;
         }
         else
@@ -535,7 +536,7 @@ public:
             else if (strcmp(node->data, y->data) == 0)
             {
                 strcpy(y->value, value->data);
-                printTree(index1, index2);
+                // printTree(index1, index2);
                 return true;
             }
             else
@@ -546,18 +547,18 @@ public:
             if (node->parent == nullptr)
             {
                 node->color = 0;
-                printTree(index1, index2);
+                // printTree(index1, index2);
 
                 return false;
             }
             if (node->parent->parent == nullptr)
             {
-                printTree(index1, index2);
+                // printTree(index1, index2);
 
                 return false;
             }
             insertFix(node, index1, index2);
-            printTree(index1, index2);
+            // printTree(index1, index2);
 
             return false;
         }
@@ -584,7 +585,7 @@ public:
                 else if (strcmp(node->data, x->data) == 0)
                 {
                     strcpy(y->value, value->data);
-                    printTree(index1, index2);
+                    // printTree(index1, index2);
                     return true;
                 }
                 else
@@ -648,8 +649,9 @@ public:
             for (int j = 0; j < 53; j++)
             {
                 int number = 0;
-                if (this->root[i][j] != TNULL)
+                if (this->root[i][j] != TNULL && this->root[i][j]->data[0] != '\0')
                 {
+                    // printf("i=%d j=%d\n",i,j);
                     number = this->root[i][j]->leftNo + this->root[i][j]->rightNo + 1;
                 }
                 index1 = i;
