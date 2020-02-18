@@ -35,7 +35,7 @@ char *random_value(int stringLength)
 	return value;
 }
 long CLOCKS_PER_SECOND = 1000000;
-RedBlackTree kv;
+kvStore kv;
 map<string, string> db;
 int db_size = 0;
 int num = 0;

@@ -18,7 +18,7 @@ struct Slice
     char *data;
 };
 typedef Node *NodePtr;
-class RedBlackTree
+class kvStore
 {
 private:
     NodePtr root[52][53];
@@ -391,7 +391,7 @@ private:
     // }
 
 public:
-    RedBlackTree()
+    kvStore()
     {
         TNULL = new Node;
         TNULL->color = 0;
@@ -700,22 +700,22 @@ public:
         // remaining error handling
         //
         // pair<char *, char *> *val = getNHelper(this->root[index1][index2], N);
-        // NodePtr node = getTreeHelper(this->root[index1][index2], N);
-        int *k = new int;
-        *k = 0;
-        inOrderHelper(this->root[index1][index2], k, N, key.data, value.data);
-        return true;
-        // if (node)
-        // {
-        //     strcpy(key->data, node->data);
-        //     strcpy(value->data, node->value);
-        //     return true;
-        // }
+        NodePtr node = getTreeHelper(this->root[index1][index2], N);
+        // int *k = new int;
+        // *k = 0;
+        // inOrderHelper(this->root[index1][index2], k, N, key.data, value.data);
+        // return true;
+        if (node)
+        {
+            strcpy(key.data, node->data);
+            strcpy(value.data, node->value);
+            return true;
+        }
 
         // key->size = strlen(node->data);
         // value->size = strlen(node->value);
 
-        // return false;
+        return false;
     }
     bool del(int N)
     {
@@ -747,10 +747,12 @@ public:
         //         break;
         //     }
         // }
+        
         // if (flag == false)
         // {
         //     return false;
         // }
+
         Slice *key = new Slice;
         Slice *value = new Slice;
         key->data = new char[65];
@@ -776,7 +778,7 @@ public:
 };
 // int main()
 // {
-//     RedBlackTree bst;
+//     kvStore bst;
 //     // int n;
 //     // cin >> n;
 //     // char key[64];
@@ -807,7 +809,7 @@ public:
 //     a->data = (char *)malloc(sizeof(char)*64);
 //     b->data = (char *)malloc(sizeof(char)*256);
 
-//     RedBlackTree kv;
+//     kvStore kv;
 //     struct timespec start, end;
 //     clock_gettime(CLOCK_MONOTONIC, &start);
 
@@ -875,7 +877,7 @@ public:
 
 //     int n;
 //     scanf("%d", &n);
-//     RedBlackTree kv;
+//     kvStore kv;
 //     struct timespec start, end;
 //     clock_gettime(CLOCK_MONOTONIC, &start);
 
