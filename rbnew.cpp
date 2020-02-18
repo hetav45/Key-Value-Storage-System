@@ -3,8 +3,8 @@
 using namespace std;
 struct Node
 {
-    char data[64];
-    char value[256];
+    char data[65];
+    char value[257];
     Node *parent;
     Node *left;
     Node *right;
@@ -15,7 +15,7 @@ struct Node
 struct Slice
 {
     uint8_t size;
-    char data[256];
+    char *data;
 };
 typedef Node *NodePtr;
 class RedBlackTree
@@ -41,13 +41,19 @@ private:
             preOrderHelper(node->right);
         }
     }
-    void inOrderHelper(NodePtr node)
+    void inOrderHelper(NodePtr node, int *j, int k, char *key, char *value)
     {
         if (node != TNULL)
         {
-            inOrderHelper(node->left);
-            // cout << node->data << " ";
-            inOrderHelper(node->right);
+            inOrderHelper(node->left, j, k, key, value);
+            (*j)++;
+            if (*j == k)
+            {
+                strcpy(key, node->data);
+                strcpy(value, node->value);
+                return;
+            }
+            inOrderHelper(node->right, j, k, key, value);
         }
     }
     void postOrderHelper(NodePtr node)
@@ -214,7 +220,7 @@ private:
                     z = node;
                     break;
                 }
-                if (strcmp(node->data, key) <= 0)
+                if (strcmp(node->data, key) < 0)
                 {
                     node->rightNo -= 1;
                     node = node->right;
@@ -225,6 +231,25 @@ private:
                     node = node->left;
                 }
             }
+            while (node != TNULL)
+            {
+                if (strcmp(node->data, key) == 0)
+                {
+                    z = node;
+                    // break;
+                }
+                if (strcmp(node->data, key) <= 0)
+                {
+                    // node->rightNo -= 1;
+                    node = node->right;
+                }
+                else
+                {
+                    // node->leftNo -= 1;
+                    node = node->left;
+                }
+            }
+            // node = TNULL;
             if (z == TNULL)
             {
                 return false;
@@ -478,27 +503,36 @@ public:
         y->rightNo = x->leftNo + 1 + x->rightNo;
         x->parent = y;
     }
-    bool put(Slice *key, Slice *value)
+    bool put(Slice &key, Slice &value)
     {
+        // for (int i = 0; i < 52; i++)
+        // {
+        //     if(root[i][0]!=TNULL)
+        //     {
+        //         printf("Not null %d\n",i);
+        //     }
+        // }
+
         int index1, index2;
-        if (key->data[1] != '\0')
+        if (key.data[1] != '\0')
         {
-            index1 = code(key->data[0]);
-            index2 = code(key->data[1]) + 1;
+            // printf("Not null\n");
+            index1 = code(key.data[0]);
+            index2 = code(key.data[1]) + 1;
         }
         else
         {
-            index1 = code(key->data[0]);
+            index1 = code(key.data[0]);
             index2 = 0;
         }
-        NodePtr temp = searchTreeHelper(this->root[index1][index2], key->data);
+        NodePtr temp = searchTreeHelper(this->root[index1][index2], key.data);
         if (temp == TNULL)
         {
             // printf("%d %d\n",index1,index2);
             NodePtr node = new Node;
             node->parent = nullptr;
-            strcpy(node->data, key->data);
-            strcpy(node->value, value->data);
+            strcpy(node->data, key.data);
+            strcpy(node->value, value.data);
             node->left = TNULL;
             node->right = TNULL;
             node->color = 1;
@@ -514,10 +548,6 @@ public:
                     x->leftNo += 1;
                     x = x->left;
                 }
-                else if (strcmp(node->data, x->data) == 0)
-                {
-                    break;
-                }
                 else
                 {
                     x->rightNo += 1;
@@ -532,12 +562,6 @@ public:
             else if (strcmp(node->data, y->data) < 0)
             {
                 y->left = node;
-            }
-            else if (strcmp(node->data, y->data) == 0)
-            {
-                strcpy(y->value, value->data);
-                // printTree(index1, index2);
-                return true;
             }
             else
             {
@@ -566,8 +590,8 @@ public:
         {
             NodePtr node = new Node;
             node->parent = nullptr;
-            strcpy(node->data, key->data);
-            strcpy(node->value, value->data);
+            strcpy(node->data, key.data);
+            strcpy(node->value, value.data);
             node->left = TNULL;
             node->right = TNULL;
             node->color = 1;
@@ -584,7 +608,7 @@ public:
                 }
                 else if (strcmp(node->data, x->data) == 0)
                 {
-                    strcpy(y->value, value->data);
+                    strcpy(y->value, value.data);
                     // printTree(index1, index2);
                     return true;
                 }
@@ -593,42 +617,43 @@ public:
                     x = x->right;
                 }
             }
+            return false;
         }
     }
 
-    bool del(Slice *data)
+    bool del(Slice &data)
     {
         int index1, index2;
-        if (data->data[1] != '\0')
+        if (data.data[1] != '\0')
         {
-            index1 = code(data->data[0]);
-            index2 = code(data->data[1]) + 1;
+            index1 = code(data.data[0]);
+            index2 = code(data.data[1]) + 1;
         }
         else
         {
-            index1 = code(data->data[0]);
+            index1 = code(data.data[0]);
             index2 = 0;
         }
-        return deleteNodeHelper(this->root[index1][index2], data->data, index1, index2);
+        return deleteNodeHelper(this->root[index1][index2], data.data, index1, index2);
     }
-    bool get(Slice *key, Slice *value)
+    bool get(Slice &key, Slice &value)
     {
         int index1, index2;
-        if (key->data[1] != '\0')
+        if (key.data[1] != '\0')
         {
-            index1 = code(key->data[0]);
-            index2 = code(key->data[1]) + 1;
+            index1 = code(key.data[0]);
+            index2 = code(key.data[1]) + 1;
         }
         else
         {
-            index1 = code(key->data[0]);
+            index1 = code(key.data[0]);
             index2 = 0;
         }
-        NodePtr temp = searchTreeHelper(this->root[index1][index2], key->data);
+        NodePtr temp = searchTreeHelper(this->root[index1][index2], key.data);
         if (temp == TNULL)
             return false;
-        strcpy(value->data, temp->value);
-
+        // strcpy(value.data, temp->value);
+        value.data = temp->value;
         return true;
     }
     void printTree(int index1, int index2)
@@ -638,7 +663,7 @@ public:
             printHelper(this->root[index1][index2], "", true);
         }
     }
-    bool get(int N1, Slice *key, Slice *value)
+    bool get(int N1, Slice &key, Slice &value)
     {
         int N = N1;
         int index1;
@@ -675,54 +700,66 @@ public:
         // remaining error handling
         //
         // pair<char *, char *> *val = getNHelper(this->root[index1][index2], N);
-        NodePtr node = getTreeHelper(this->root[index1][index2], N);
-        if (node)
-        {
-            strcpy(key->data, node->data);
-            strcpy(value->data, node->value);
-            return true;
-        }
+        // NodePtr node = getTreeHelper(this->root[index1][index2], N);
+        int *k = new int;
+        *k = 0;
+        inOrderHelper(this->root[index1][index2], k, N, key.data, value.data);
+        return true;
+        // if (node)
+        // {
+        //     strcpy(key->data, node->data);
+        //     strcpy(value->data, node->value);
+        //     return true;
+        // }
 
         // key->size = strlen(node->data);
         // value->size = strlen(node->value);
 
-        return false;
+        // return false;
     }
     bool del(int N)
     {
-        int index1;
-        int index2;
-        bool flag = false;
 
-        for (int i = 0; i < 52; i++)
+        // int index1;
+        // int index2;
+        // bool flag = false;
+
+        // for (int i = 0; i < 52; i++)
+        // {
+        //     for (int j = 0; j < 53; j++)
+        //     {
+        //         int number = 0;
+        //         if (root[i][j] != TNULL)
+        //         {
+        //             number = root[i][j]->leftNo + root[i][j]->rightNo + 1;
+        //         }
+        //         index1 = i;
+        //         index2 = j;
+        //         if (N - number <= 0)
+        //         {
+        //             flag = true;
+        //             break;
+        //         }
+        //         N -= number;
+        //     }
+        //     if (flag == true)
+        //     {
+        //         break;
+        //     }
+        // }
+        // if (flag == false)
+        // {
+        //     return false;
+        // }
+        Slice *key = new Slice;
+        Slice *value = new Slice;
+        key->data = new char[65];
+        value->data = new char[257];
+        if (get(N, *key, *value) == true)
         {
-            for (int j = 0; j < 53; j++)
-            {
-                int number = 0;
-                if (root[i][j] != TNULL)
-                {
-                    number = root[i][j]->leftNo + root[i][j]->rightNo + 1;
-                }
-                index1 = i;
-                index2 = j;
-                if (N - number <= 0)
-                {
-                    flag = true;
-                    break;
-                }
-                N -= number;
-            }
-            if (flag == true)
-            {
-                break;
-            }
+            return del(*key);
         }
-        if (flag == false)
-        {
-            return false;
-        }
-        NodePtr node = getTreeHelper(this->root[index1][index2], N);
-        return deleteNodeHelper(this->root[index1][index2], node->data, index1, index2);
+        return false;
     }
     int code(char c)
     {
