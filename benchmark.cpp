@@ -170,7 +170,7 @@ int main()
 		}
 		else if (x == 1)
 		{
-			int k = rand() % 64 + 1;
+			int k = rand() % 62 + 1;
 			int v = rand() % 256 + 1;
 			Slice key;
 			// key.data = (char *)malloc(sizeof(char) * 64);
@@ -190,7 +190,7 @@ int main()
 			db_size++;
 			if (check2 == false || check1 != ans)
 			{
-				printf("x=%d\n",x);
+				printf("key=%s Check1=%d ans=%d check2=%d\n",key.data,check1,ans,check2);
 				incorrect = true;
 			}
 			// free(value.data);
@@ -219,7 +219,7 @@ int main()
 			bool check2 = kv.get(&key, &value);
 			if (check2 == true)
 			{
-				printf("x=%d\n",x);
+				printf("x=%d key=%s\n",x,key.data);
 				
 				incorrect = true;
 			}
@@ -284,15 +284,15 @@ int main()
 		cout << 0 << endl;
 		return 0;
 	}
-	int threads = 4;
+	// int threads = 4;
 
-	pthread_t tid[threads];
-	for (int i = 0; i < threads; i++)
-	{
-		tid[i] = i;
-		pthread_create(&tid[i], NULL, myThreadFun, (void *)&tid[i]);
-	}
-	for (int i = 0; i < threads; i++)
-		pthread_join(tid[i], NULL);
+	// pthread_t tid[threads];
+	// for (int i = 0; i < threads; i++)
+	// {
+	// 	tid[i] = i;
+	// 	pthread_create(&tid[i], NULL, myThreadFun, (void *)&tid[i]);
+	// }
+	// for (int i = 0; i < threads; i++)
+	// 	pthread_join(tid[i], NULL);
 	return 0;
 }

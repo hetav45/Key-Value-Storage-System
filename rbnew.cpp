@@ -498,7 +498,7 @@ public:
             index1 = code(key->data[0]);
             index2 = 0;
         }
-        printf("%d %d\n",index1,index2);
+        // printf("%d %d\n",index1,index2);
         NodePtr node = new Node;
         node->parent = nullptr;
         strcpy(node->data, key->data);
@@ -540,7 +540,8 @@ public:
         else if (strcmp(node->data, y->data) == 0)
         {
             strcpy(y->value, value->data);
-            printTree(index1, index2);
+            // printTree(index1, index2);
+            // printf("1 %s \n", key->data);
             return true;
         }
         else
@@ -550,36 +551,60 @@ public:
         if (node->parent == nullptr)
         {
             node->color = 0;
-            printTree(index1, index2);
+            // printTree(index1, index2);
+            // printf("0 %s \n", key->data);
 
             return false;
         }
         if (node->parent->parent == nullptr)
         {
-            printTree(index1, index2);
+            // printTree(index1, index2);
+            // printf("0 %s \n", key->data);
 
             return false;
         }
         insertFix(node, index1, index2);
-        printTree(index1, index2);
+        // printTree(index1, index2);
+        // printf("0 %s \n", key->data);
+
         return false;
     }
 
     bool del(Slice *data)
     {
-        int index1 = code(data->data[0]);
-        int index2 = code(data->data[1]) + 1;
-
+        int index1, index2;
+        if (data->data[1] != '\0')
+        {
+            index1 = code(data->data[0]);
+            index2 = code(data->data[1]) + 1;
+        }
+        else
+        {
+            index1 = code(data->data[0]);
+            index2 = 0;
+        }
+        // printf("del %s\n",data->data);
         return deleteNodeHelper(this->root[index1][index2], data->data, index1, index2);
     }
     bool get(Slice *key, Slice *value)
     {
-        int index1 = code(key->data[0]);
-        int index2 = code(key->data[1]) + 1;
-        printTree(index1, index2);
+        int index1, index2;
+        if (key->data[1] != '\0')
+        {
+            index1 = code(key->data[0]);
+            index2 = code(key->data[1]) + 1;
+        }
+        else
+        {
+            index1 = code(key->data[0]);
+            index2 = 0;
+        }
+        // int index1 = code(key->data[0]);
+        // int index2 = code(key->data[1]) + 1;
+        // printTree(index1, index2);
         // char *temp = searchHelper(this->root[index1][index2], key->data);
         NodePtr temp = searchTreeHelper(this->root[index1][index2], key->data);
-        printf("%s\n", temp->value);
+        // printf("%s\n", temp->value);
         if (temp == TNULL)
             return false;
         strcpy(value->data, temp->value);
@@ -661,9 +686,10 @@ public:
     {
         int index1;
         int index2;
+        bool flag = false;
+
         for (int i = 0; i < 52; i++)
         {
-            bool flag = false;
             for (int j = 0; j < 53; j++)
             {
                 int number = 0;
@@ -685,6 +711,10 @@ public:
                 break;
             }
         }
+        if (flag == false)
+        {
+            return false;
+        }
         NodePtr node = getTreeHelper(this->root[index1][index2], N);
         return deleteNodeHelper(this->root[index1][index2], node->data, index1, index2);
     }
@@ -701,74 +731,74 @@ public:
         }
     }
 };
-int main()
-{
-    Slice *a = (Slice *)malloc(sizeof(Slice));
-    Slice *b = (Slice *)malloc(sizeof(Slice));
+// int main()
+// {
+//     Slice *a = (Slice *)malloc(sizeof(Slice));
+//     Slice *b = (Slice *)malloc(sizeof(Slice));
 
-    // a->data = (char *)malloc(sizeof(char)*64);
-    // b->data = (char *)malloc(sizeof(char)*256);
+//     // a->data = (char *)malloc(sizeof(char)*64);
+//     // b->data = (char *)malloc(sizeof(char)*256);
 
-    RedBlackTree kv;
-    struct timespec start, end;
-    clock_gettime(CLOCK_MONOTONIC, &start);
+//     RedBlackTree kv;
+//     struct timespec start, end;
+//     clock_gettime(CLOCK_MONOTONIC, &start);
 
-    char op[10];
+//     char op[10];
 
-    for (; 1;)
-    {
-        scanf("%s", op);
+//     for (; 1;)
+//     {
+//         scanf("%s", op);
 
-        if (strcmp(op, "put") == 0)
-        {
-            scanf("%s", a->data);
-            scanf("%s", b->data);
-            printf("%s %s\n", a->data, b->data);
-            bool ret = kv.put(a, b);
-            printf("ret - %d\n", ret);
-        }
-        else if (strcmp(op, "get") == 0)
-        {
-            scanf("%s", a->data);
-            bool ret = kv.get(a, b);
-            // printf("%d\n", ret);
-            fflush(stdout);
-            if (!ret)
-                printf("ret - %d\n", ret);
-            else
-                printf("ret - %d\tval - %s\n", ret, b->data);
-        }
-        else if (strcmp(op, "getn") == 0)
-        {
-            int index;
-            scanf("%d", &index);
-            bool ret = kv.get(index, a, b);
-            if (!ret)
-                printf("ret - %d\n", ret);
-            else
-                printf("ret - %d\tkey - %s\tval - %s\n", ret, a->data, b->data);
-        }
-        else if (strcmp(op, "del") == 0)
-        {
-            scanf("%s", a->data);
-            bool ret = kv.del(a);
-            printf("ret - %d\n", ret);
-        }
-        else if (strcmp(op, "deln") == 0)
-        {
-            int index;
-            scanf("%d", &index);
-            bool ret = kv.del(index);
-            printf("ret - %d\n", ret);
-        }
-        else if (strcmp(op, "exit") == 0)
-        {
-            break;
-        }
-    }
+//         if (strcmp(op, "put") == 0)
+//         {
+//             scanf("%s", a->data);
+//             scanf("%s", b->data);
+//             // printf("%s %s\n", a->data, b->data);
+//             bool ret = kv.put(a, b);
+//             printf("ret - %d\n", ret);
+//         }
+//         else if (strcmp(op, "get") == 0)
+//         {
+//             scanf("%s", a->data);
+//             bool ret = kv.get(a, b);
+//             // printf("%d\n", ret);
+//             fflush(stdout);
+//             if (!ret)
+//                 printf("ret - %d\n", ret);
+//             else
+//                 printf("ret - %d\tval - %s\n", ret, b->data);
+//         }
+//         else if (strcmp(op, "getn") == 0)
+//         {
+//             int index;
+//             scanf("%d", &index);
+//             bool ret = kv.get(index, a, b);
+//             if (!ret)
+//                 printf("ret - %d\n", ret);
+//             else
+//                 printf("ret - %d\tkey - %s\tval - %s\n", ret, a->data, b->data);
+//         }
+//         else if (strcmp(op, "del") == 0)
+//         {
+//             scanf("%s", a->data);
+//             bool ret = kv.del(a);
+//             printf("ret - %d\n", ret);
+//         }
+//         else if (strcmp(op, "deln") == 0)
+//         {
+//             int index;
+//             scanf("%d", &index);
+//             bool ret = kv.del(index);
+//             printf("ret - %d\n", ret);
+//         }
+//         else if (strcmp(op, "exit") == 0)
+//         {
+//             break;
+//         }
+//     }
 
-    return 0;
-}
+//     return 0;
+// }
 
 // int main()
 // {
