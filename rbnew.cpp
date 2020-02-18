@@ -15,7 +15,7 @@ struct Node
 struct Slice
 {
     uint8_t size;
-    char *data;
+    char data[256];
 };
 typedef Node *NodePtr;
 class RedBlackTree
@@ -36,7 +36,7 @@ private:
     {
         if (node != TNULL)
         {
-            cout << node->data << " ";
+            // cout << node->data << " ";
             preOrderHelper(node->left);
             preOrderHelper(node->right);
         }
@@ -46,7 +46,7 @@ private:
         if (node != TNULL)
         {
             inOrderHelper(node->left);
-            cout << node->data << " ";
+            // cout << node->data << " ";
             inOrderHelper(node->right);
         }
     }
@@ -56,7 +56,7 @@ private:
         {
             postOrderHelper(node->left);
             postOrderHelper(node->right);
-            cout << node->data << " ";
+            // cout << node->data << " ";
         }
     }
     NodePtr searchTreeHelper(NodePtr node, char *key)
@@ -73,7 +73,6 @@ private:
     }
     NodePtr getTreeHelper(NodePtr node, int N)
     {
-        // printf("IN func %s, data %s\n",node->data,root[26][27]->data);
         if (node == TNULL || ((node->leftNo + 1) == N))
         {
             return node;
@@ -194,7 +193,7 @@ private:
         }
         if (z == TNULL)
         {
-            cout << "Key not found in the tree" << endl;
+            // cout << "Key not found in the tree" << endl;
             return NULL;
         }
         y = z;
@@ -224,7 +223,7 @@ private:
         }
         if (z == TNULL)
         {
-            // cout << "Key not found in the tree" << endl;
+            // // cout << "Key not found in the tree" << endl;
             return false;
         }
         y = z;
@@ -328,19 +327,19 @@ private:
     {
         if (root != TNULL)
         {
-            cout << indent;
+            // cout << indent;
             if (last)
             {
-                cout << "R----";
+                // cout << "R----";
                 indent += "   ";
             }
             else
             {
-                cout << "L----";
+                // cout << "L----";
                 indent += "|  ";
             }
             string sColor = root->color ? "RED" : "BLACK";
-            cout << root->data << "(" << sColor << ")  " << root->leftNo << "   " << root->rightNo << endl;
+            // cout << root->data << "(" << sColor << ")  " << root->leftNo << "   " << root->rightNo << endl;
             printHelper(root->left, indent, false);
             printHelper(root->right, indent, true);
         }
@@ -571,12 +570,17 @@ public:
     {
         int index1 = code(key->data[0]);
         int index2 = code(key->data[1]) + 1;
-        value->data = searchHelper(this->root[index1][index2], key->data);
-        value->size = strlen(value->data);
-        if (value->size)
-            return true;
-        else
+
+        char *temp = searchHelper(this->root[index1][index2], key->data);
+        if (temp == NULL)
             return false;
+        strcpy(value->data, temp);
+        // value->size = strlen(value->data);
+
+        // if (value->data[0]==0)
+        return true;
+        // else
+        // return false;
     }
     void printTree(int index1, int index2)
     {
@@ -598,21 +602,18 @@ public:
     // }
     bool get(int N1, Slice *key, Slice *value)
     {
-        // printf("inititila %s %s\n",root[26][27]->data,key->data);
         int N = N1;
         int index1;
         int index2;
-        bool flag;
+        bool flag = false;
         for (int i = 0; i < 52; i++)
         {
-            flag = false;
             for (int j = 0; j < 53; j++)
             {
                 int number = 0;
                 if (this->root[i][j] != TNULL)
                 {
                     number = this->root[i][j]->leftNo + this->root[i][j]->rightNo + 1;
-                    // printf("\n\nblaha aba %d %d %d\n\n",number,i,j);
                 }
                 index1 = i;
                 index2 = j;
@@ -634,28 +635,19 @@ public:
         }
         // remaining error handling
         //
-        // printf("ind 1 %d ind 2 %d \n",index1,index2);
         // pair<char *, char *> *val = getNHelper(this->root[index1][index2], N);
-        // printf("root check %s\n",this->root[index1][index2]->data);
         NodePtr node = getTreeHelper(this->root[index1][index2], N);
-
-        key->size = strlen(node->data);
-        key->data = (char *)malloc(sizeof(char) * key->size);
-        strcpy(key->data, node->data);
-        value->size = strlen(node->value);
-        value->data = (char *)malloc(sizeof(char) * value->size);
-        // value->data = val->second;
-        strcpy(value->data, node->value);
-        // printf("final %s\n",root[26][27]->data);
-
-        if (key->data)
+        if (node)
         {
+            strcpy(key->data, node->data);
+            strcpy(value->data, node->value);
             return true;
         }
-        else
-        {
-            return false;
-        }
+
+        // key->size = strlen(node->data);
+        // value->size = strlen(node->value);
+
+        return false;
     }
     bool del(int N)
     {
@@ -686,7 +678,6 @@ public:
             }
         }
         NodePtr node = getTreeHelper(this->root[index1][index2], N);
-        printf("\n\n\n%s\n\n\n", node->data);
         return deleteNodeHelper(this->root[index1][index2], node->data, index1, index2);
     }
     int code(char c)
@@ -703,46 +694,42 @@ public:
     }
 };
 
-int main()
-{
-    Slice *a = (Slice *)malloc(sizeof(Slice));
-    Slice *b = (Slice *)malloc(sizeof(Slice));
+// int main()
+// {
+//     Slice *a = (Slice *)malloc(sizeof(Slice));
+//     Slice *b = (Slice *)malloc(sizeof(Slice));
 
-    int n;
-    scanf("%d", &n);
-    RedBlackTree kv;
-    struct timespec start, end;
-    clock_gettime(CLOCK_MONOTONIC, &start);
+//     int n;
+//     scanf("%d", &n);
+//     RedBlackTree kv;
+//     struct timespec start, end;
+//     clock_gettime(CLOCK_MONOTONIC, &start);
 
-    for (int i = 0; i < n; i++)
-    {
+//     for (int i = 0; i < n; i++)
+//     {
 
-        a->data = (char *)malloc(64 * sizeof(char));
-        scanf("%s", a->data);
-        b->data = (char *)malloc(256 * sizeof(char));
-        scanf("%s", b->data);
-        kv.put(a, b);
-    }
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    double tdiff = (end.tv_sec - start.tv_sec) + 1e-9 * (end.tv_nsec - start.tv_nsec);
-    printf("time %f\n", tdiff);
-    while (1)
-    {
-        Slice *key = (Slice *)malloc(sizeof(Slice));
-        Slice *value = (Slice *)malloc(sizeof(Slice));
-        int N;
-        // scanf("%d", &N);
-        key->data = (char *)malloc(sizeof(char) * 64);
-        scanf("%s", key->data);
-        // int N1=N;
-        kv.get(key, value);
-        printf("key=%s value=%s n=%d\n", key->data, value->data, N);
-        // kv.printTree(26,27);
-        // kv.get(N, key, value);
-        // printf("key=%s value=%s n=%d\n", key->data, value->data, N);
+//         a->data = (char *)malloc(64 * sizeof(char));
+//         scanf("%s", a->data);
+//         b->data = (char *)malloc(256 * sizeof(char));
+//         scanf("%s", b->data);
+//         kv.put(a, b);
+//     }
+//     clock_gettime(CLOCK_MONOTONIC, &end);
+//     double tdiff = (end.tv_sec - start.tv_sec) + 1e-9 * (end.tv_nsec - start.tv_nsec);
+//     while (1)
+//     {
+//         Slice *key = (Slice *)malloc(sizeof(Slice));
+//         Slice *value = (Slice *)malloc(sizeof(Slice));
+//         int N;
+//         // scanf("%d", &N);
+//         key->data = (char *)malloc(sizeof(char) * 64);
+//         scanf("%s", key->data);
+//         // int N1=N;
+//         kv.get(key, value);
+//         // kv.printTree(26,27);
+//         // kv.get(N, key, value);
 
-        printf("%d\n", kv.del(key));
-        kv.printTree(26, 27);
-    }
-    return 0;
-}
+//         kv.printTree(26, 27);
+//     }
+//     return 0;
+// }
