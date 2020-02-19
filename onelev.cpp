@@ -12,6 +12,10 @@ struct Node
     int color;
 };
 typedef Node *NodePtr;
+struct Slice{
+	uint8_t size;
+	char*   data;
+};
 struct Mempiece
 {
     Node *root;
@@ -19,6 +23,7 @@ struct Mempiece
 } mempiece;
 int NUMBER = 100;
 int lexhash[52];
+int j_count;
 class RedBlackTree
 {
 private:
@@ -42,27 +47,27 @@ private:
     //         preOrderHelper(node->right);
     //     }
     // }
-    void inOrderHelper(NodePtr node, int k, int *j, string *w, string *v)
+    void inOrderHelper(NodePtr node, int k, char *w, char *v)
     {
+        // printf("%p\n", j);
+        // fflush(stdout);
+        
+       // cout<<'k'<<k<<endl;
+       // cout<<'j'<<*j<<endl;
         if (node != TNULL)
         {
-            inOrderHelper(node->left, k, j, w, v);
-            (*j)++;
+            inOrderHelper(node->left, k, w, v);
+            j_count++;
             //cout << node->data <<endl;
-            if (*j == k)
+            if (j_count == k)
             {
-                 string temp1(node->data);
-                 string temp2(node->value);
-                 *w = temp1;
-                 *v = temp2;
-                // cout << node->data << endl;
-                // cout << node->value << endl;
-                // cout << k << endl;
+                strcpy(w,node->data);
+                strcpy(v,node->value);
 
                 return;
             }
             //cout << node->data << " ";
-            inOrderHelper(node->right, k, j, w, v);
+            inOrderHelper(node->right, k, w, v);
         }
     }
     // void postOrderHelper(NodePtr node)
@@ -336,17 +341,20 @@ public:
     // {
     //     postOrderHelper(this->root);
     // }
-    bool get(char k[])
+    bool get(Slice &key, Slice &value)
     {
         int index;
-        if (k[0] <= 'Z')
-            index = k[0] - 'A';
+        NodePtr node;
+        if (key.data[0] <= 'Z')
+            index = key.data[0] - 'A';
         else
-            index = k[0] - 'a' + 26;
-        if (searchTreeHelper(this->root[index], k) == TNULL)
+            index = key.data[0] - 'a' + 26;
+        if ((node = searchTreeHelper(this->root[index], key.data)) == TNULL)
             return false;
-        else
+        else {
+            value.data = node->value;
             return true;
+        }
     }
     NodePtr minimum(NodePtr node)
     {
@@ -441,15 +449,15 @@ public:
         y->right = x;
         x->parent = y;
     }
-    bool put(char key[], char val[])
+    bool put(Slice &key, Slice &value)
     {
         // if(strcmp(key,"oCxfxpemTGMazERgUtmalkuMMmOTEpGTtGAtVgFqMrqNxJTTdHUQtQDg")==0)
         // 	cout<<val;
         int index;
-        if (key[0] <= 'Z')
-            index = key[0] - 'A';
+        if (key.data[0] <= 'Z')
+            index = key.data[0] - 'A';
         else
-            index = key[0] - 'a' + 26;
+            index = key.data[0] - 'a' + 26;
         lexhash[index]++;
         if (mempiece.root == NULL || mempiece.used == NUMBER)
         {
@@ -458,7 +466,7 @@ public:
         }
         NodePtr node = &mempiece.root[mempiece.used++];
         node->parent = nullptr;
-        strcpy(node->data, key);
+        strcpy(node->data, key.data);
         //cout<<key<<endl;
         // if (strcmp(node->data, key) != 0)
         // {
@@ -467,7 +475,7 @@ public:
         //     cout << node->data << " " << key << endl;
         //     cout << "bughere" << endl;
         // }
-        strcpy(node->value, val);
+        strcpy(node->value, value.data);
         // if (strcmp(node->value, val) != 0)
         // {
         //     cout << strlen(node->value)<<endl;
@@ -487,7 +495,7 @@ public:
             {
                 //cout<<node->data<<endl;
 
-                strcpy(x->value, val);
+                strcpy(x->value, value.data);
                 lexhash[index]--;
                 // if (strcmp(node->data, key) != 0)
                 // {
@@ -530,7 +538,7 @@ public:
         insertFix(node, index);
         return false;
     }
-    pair<string, string> get(int n)
+    bool get(int n, Slice &key, Slice &value)
     {
         int i = 0;
         int temp = 0;
@@ -542,27 +550,29 @@ public:
             temp += lexhash[i];
             //cout<<temp<<endl;
         }
-        int *k = new int;
-        pair<string, string> p;
-        cout << "i " << i << endl;
-        cout << "n " << n << endl;
-        cout << "temp " << temp << endl;
-        inOrderHelper(this->root[i], n-temp, k, &(p.first), &(p.second));
-        return p;
+        // int *k = (int *)malloc(sizeof(int*));
+        j_count=0; 
+        // printf("%p\n", k);
+        // fflush(stdout);           
+        // i=0;
+        // n=120;
+        // temp=0;
+        inOrderHelper(this->root[i], n-temp, key.data, value.data);
+        return true;
     }
     // NodePtr getRoot()
     // {
     //     return this->root;
     // }
-    bool del(char data[])
+    bool del(Slice &key)
     {
         int index;
-        if (data[0] <= 'Z')
-            index = data[0] - 'A';
+        if (key.data[0] <= 'Z')
+            index = key.data[0] - 'A';
         else
-            index = data[0] - 'a' + 26;
+            index = key.data[0] - 'a' + 26;
         //cout << "In delete";
-        if (deleteNodeHelper(this->root[index], data, index) == true)
+        if (deleteNodeHelper(this->root[index], key.data, index) == true)
         {
           //  cout << "In here";
             lexhash[index]--;
@@ -570,6 +580,16 @@ public:
         }
         else
             return false;
+    }
+    bool del(int n)
+    {
+    	Slice key,value;
+		key.data =new char[65];
+		value.data =new char[257];
+    	bool success = get(n,key,value);
+    	if(!success)
+    		return false;
+    	return del(key);
     }
     // void printTree()
     // {
@@ -579,21 +599,21 @@ public:
     //     }
     // }
 };
-// int main()
-// {
-//     RedBlackTree bst;
-//     int n;
-//     cin >> n;
-//     char key[64];
-//     char value[256];
-//     for (int i = 0; i < n; i++)
-//     {
-//         cin >> key >> value;
-//         bst.put(key, value);
-//     }
-//     //bst.printTree();
-//     // cout << endl
-//     //      << "After deleting" << endl;
-//     // //bst.deleteNode(13);
-//     // bst.printTree();
-// }
+/* int main()
+ {
+    RedBlackTree bst;
+    //int n;
+    //cin >> n;
+    char key[64];
+    char value[256];
+    for (int i = 0; i < 1000000; i++)
+    {
+        cin >> key >> value;
+        // bst.put(key, value);
+    }
+    //bst.printTree();
+    // cout << endl
+    //      << "After deleting" << endl;
+    // //bst.deleteNode(13);
+    // bst.printTree();
+}*/
