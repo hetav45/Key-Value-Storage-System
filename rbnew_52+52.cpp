@@ -1,3 +1,4 @@
+// Implementing Red-Black Tree in C++
 #include <bits/stdc++.h>
 using namespace std;
 struct Node
@@ -22,6 +23,7 @@ class kvStore
 private:
     NodePtr root[52][53];
     NodePtr TNULL;
+    int no_of_element[55];
     void initializeNULLNode(NodePtr node, NodePtr parent)
     {
         node->parent = parent;
@@ -30,6 +32,59 @@ private:
         node->leftNo = 0;
         node->rightNo = 0;
         node->color = 0;
+    }
+    void preOrderHelper(NodePtr node)
+    {
+        if (node != TNULL)
+        {
+            // cout << node->data << " ";
+            preOrderHelper(node->left);
+            preOrderHelper(node->right);
+        }
+    }
+    bool hasredchild(NodePtr node)
+    {
+        return (node->left != TNULL and node->left->color == 1) or (node->right != TNULL and node->right->color == 1);
+    }
+    bool isonleft(NodePtr node)
+    {
+        return node == node->parent->left;
+    }
+    NodePtr sibling(NodePtr node)
+    {
+        if (node->parent == TNULL)
+        {
+            return TNULL;
+        }
+        if (isonleft(node))
+        {
+            return node->parent->right;
+        }
+        return node->parent->right;
+    }
+    void inOrderHelper(NodePtr node, int *j, int k, char *key, char *value)
+    {
+        if (node != TNULL)
+        {
+            inOrderHelper(node->left, j, k, key, value);
+            (*j)++;
+            if (*j == k)
+            {
+                strcpy(key, node->data);
+                strcpy(value, node->value);
+                return;
+            }
+            inOrderHelper(node->right, j, k, key, value);
+        }
+    }
+    void postOrderHelper(NodePtr node)
+    {
+        if (node != TNULL)
+        {
+            postOrderHelper(node->left);
+            postOrderHelper(node->right);
+            // cout << node->data << " ";
+        }
     }
     NodePtr searchTreeHelper(NodePtr node, char *key)
     {
@@ -66,7 +121,7 @@ private:
             if (x == x->parent->left)
             {
                 s = x->parent->right;
-                if(s==TNULL)
+                if (s == TNULL)
                     break;
                 if (s->color == 1)
                 {
@@ -75,7 +130,7 @@ private:
                     leftRotate(x->parent, index1, index2);
                     s = x->parent->right;
                 }
-               else if ( s->left->color == 0 && s->right->color == 0)
+                else if (s->left->color == 0 && s->right->color == 0)
                 {
                     s->color = 1;
                     x = x->parent;
@@ -99,7 +154,7 @@ private:
             else
             {
                 s = x->parent->left;
-                if(s==TNULL)
+                if (s == TNULL)
                     break;
                 if (s->color == 1)
                 {
@@ -169,7 +224,6 @@ private:
         }
         if (z == TNULL)
         {
-            // cout << "Key not found in the tree" << endl;
             return NULL;
         }
         y = z;
@@ -194,7 +248,177 @@ private:
             return x->right;
         }
     }
-    
+
+    void fixdoubleblack(NodePtr x, int index1, int index2)
+    {
+        if (x == root[index1][index2])
+        {
+            return;
+        }
+        NodePtr sib = sibling(x);
+        NodePtr parent = x->parent;
+        if (sib == TNULL)
+        {
+            fixdoubleblack(parent, index1, index2);
+        }
+        else
+        {
+            if (sib->color == 1)
+            {
+                parent->color = 1;
+                sib->color = 0;
+                if (isonleft(sib))
+                {
+                    rightRotate(parent, index1, index2);
+                }
+                else
+                {
+                    leftRotate(parent, index1, index2);
+                }
+                fixdoubleblack(x, index1, index2);
+            }
+            else
+            {
+                if (hasredchild(sib))
+                {
+                    if (sib->left != TNULL and sib->left->color == 1)
+                    {
+                        if (isonleft(sib))
+                        {
+                            sib->left->color = sib->color;
+                            sib->color = parent->color;
+                            rightRotate(parent, index1, index2);
+                        }
+                        else
+                        {
+                            sib->left->color = sib->color;
+                            rightRotate(sib, index1, index2);
+                            leftRotate(parent, index1, index2);
+                        }
+                    }
+                    else
+                    {
+                        if (isonleft(sib))
+                        {
+                            sib->right->color = parent->color;
+                            leftRotate(sib, index1, index2);
+                            rightRotate(parent, index1, index2);
+                        }
+                        else
+                        {
+                            sib->right->color = sib->color;
+                            sib->color = parent->color;
+                            leftRotate(parent, index1, index2);
+                        }
+                    }
+                    parent->color = 0;
+                }
+                else
+                {
+                    sib->color = 1;
+                    if (parent->color == 0)
+                    {
+                        fixdoubleblack(parent, index1, index2);
+                    }
+                    else
+                    {
+                        parent->color = 0;
+                    }
+                }
+            }
+        }
+    }
+    void swapvalues(NodePtr u, NodePtr v)
+    {
+        char *temp;
+        char *temp1;
+        temp1 = new char[257];
+        temp = new char[257];
+        strcpy(temp, u->data);
+        strcpy(u->data, v->data);
+        strcpy(v->data, temp);
+        strcpy(temp1, u->value);
+        strcpy(u->value, v->value);
+        strcpy(v->value, temp1);
+    }
+    bool deleteNode(NodePtr node, char *key, int index1, int index2)
+    {
+        NodePtr v = searchTreeHelper(node, key);
+        if (v != TNULL)
+        {
+            NodePtr u = rbreplace(v);
+            bool uv = ((u == TNULL or u->color == 0) and (v->color == 0));
+            NodePtr parent = v->parent;
+            if (u == TNULL)
+            {
+                if (v == node)
+                {
+                    node = TNULL;
+                }
+                else
+                {
+                    if (uv)
+                    {
+                        fixdoubleblack(v, index1, index2);
+                    }
+                    else
+                    {
+                        if (sibling(v) != TNULL)
+                        {
+                            sibling(v)->color = 1;
+                        }
+                    }
+                    if (isonleft(v))
+                    {
+                        parent->left = TNULL;
+                    }
+                    else
+                    {
+                        parent->right = TNULL;
+                    }
+                }
+                delete v;
+                return true;
+            }
+            if (v->left == TNULL or v->right == TNULL)
+            {
+                if (v == node)
+                {
+                    strcpy(v->data, u->data);
+                    v->left = v->right = TNULL;
+                    delete u;
+                }
+                else
+                {
+                    if (isonleft(v))
+                    {
+                        parent->left = u;
+                    }
+                    else
+                    {
+                        parent->right = u;
+                    }
+                    delete v;
+                    u->parent = parent;
+                    if (uv)
+                    {
+                        fixdoubleblack(u, index1, index2);
+                    }
+                    else
+                    {
+                        u->color = 0;
+                    }
+                }
+                return true;
+            }
+            swapvalues(u, v);
+            deleteNode(node, key, index1, index2);
+        }
+        else
+        {
+            return false;
+        }
+    }
     bool deleteNodeHelper(NodePtr node, char *key, int index1, int index2)
     {
         NodePtr z = TNULL;
@@ -202,6 +426,7 @@ private:
         NodePtr temp = searchTreeHelper(node, key);
         if (temp != TNULL)
         {
+            no_of_element[index1]--;
             while (node != TNULL)
             {
                 if (strcmp(node->data, key) == 0)
@@ -225,20 +450,16 @@ private:
                 if (strcmp(node->data, key) == 0)
                 {
                     z = node;
-                    // break;
                 }
                 if (strcmp(node->data, key) <= 0)
                 {
-                    // node->rightNo -= 1;
                     node = node->right;
                 }
                 else
                 {
-                    // node->leftNo -= 1;
                     node = node->left;
                 }
             }
-            // node = TNULL;
             if (z == TNULL)
             {
                 return false;
@@ -283,7 +504,6 @@ private:
 
                 deleteFix(x, index1, index2);
             }
-            // printTree(index1,index2);
             return true;
         }
         else
@@ -368,17 +588,6 @@ private:
             printHelper(root->right, indent, true);
         }
     }
-    // pair<char *, char *> *getNHelper(NodePtr root1, int k)
-    // {
-    //     // NodePtr root = root1;
-    //     pair<char *, char *> *ret = (pair<char *, char *> *)malloc(sizeof(pair<char *, char *>));
-    //     ret->first = (char *)malloc(sizeof(char) * 64);
-    //     ret->second = (char *)malloc(sizeof(char) * 256);
-    //     NodePtr node = getTreeHelper(root1,k);
-    //     strcpy(ret->first,node->data);
-    //     strcpy(ret->second,node->value);
-    //     return ret;
-    // }
 
 public:
     kvStore()
@@ -394,11 +603,15 @@ public:
                 root[i][j] = TNULL;
             }
         }
-        // root = TNULL;
+        for(int i=0; i < 53; i++)
+        {
+            no_of_element[i] = 0;
+        }
     }
-    NodePtr succ(NodePtr x) {
+    NodePtr succ(NodePtr x)
+    {
         NodePtr temp = x;
-        while(temp->left != TNULL)
+        while (temp->left != TNULL)
         {
             temp = temp->left;
         }
@@ -503,18 +716,10 @@ public:
     }
     bool put(Slice &key, Slice &value)
     {
-        // for (int i = 0; i < 52; i++)
-        // {
-        //     if(root[i][0]!=TNULL)
-        //     {
-        //         printf("Not null %d\n",i);
-        //     }
-        // }
 
         int index1, index2;
         if (key.data[1] != '\0')
         {
-            // printf("Not null\n");
             index1 = code(key.data[0]);
             index2 = code(key.data[1]) + 1;
         }
@@ -526,8 +731,8 @@ public:
         NodePtr temp = searchTreeHelper(this->root[index1][index2], key.data);
         if (temp == TNULL)
         {
-            // printf("%d %d\n",index1,index2);
             NodePtr node = new Node;
+            no_of_element[index1]++;
             node->parent = nullptr;
             strcpy(node->data, key.data);
             strcpy(node->value, value.data);
@@ -569,18 +774,15 @@ public:
             if (node->parent == nullptr)
             {
                 node->color = 0;
-                // printTree(index1, index2);
 
                 return false;
             }
             if (node->parent->parent == nullptr)
             {
-                // printTree(index1, index2);
 
                 return false;
             }
             insertFix(node, index1, index2);
-            // printTree(index1, index2);
 
             return false;
         }
@@ -607,7 +809,6 @@ public:
                 else if (strcmp(node->data, x->data) == 0)
                 {
                     strcpy(y->value, value.data);
-                    // printTree(index1, index2);
                     return true;
                 }
                 else
@@ -632,9 +833,6 @@ public:
             index1 = code(data.data[0]);
             index2 = 0;
         }
-        // bool val = deleteNode(this->root[index1][index2], data.data, index1, index2);
-        // printTree(index1, index2);
-        // return val;
         return deleteNodeHelper(this->root[index1][index2], data.data, index1, index2);
     }
     bool get(Slice &key, Slice &value)
@@ -653,7 +851,6 @@ public:
         NodePtr temp = searchTreeHelper(this->root[index1][index2], key.data);
         if (temp == TNULL)
             return false;
-        // strcpy(value.data, temp->value);
         value.data = temp->value;
         return true;
     }
@@ -667,45 +864,39 @@ public:
     bool get(int N1, Slice &key, Slice &value)
     {
         int N = N1;
-        int index1;
-        int index2;
+        int index1 = 0;
+        int index2 = 0;
         bool flag = false;
         for (int i = 0; i < 52; i++)
         {
-            for (int j = 0; j < 53; j++)
+            int number = no_of_element[i];
+            if (N - number <= 0)
             {
-                int number = 0;
-                if (this->root[i][j] != TNULL && this->root[i][j]->data[0] != '\0')
-                {
-                    // printf("i=%d j=%d\n",i,j);
-                    number = this->root[i][j]->leftNo + this->root[i][j]->rightNo + 1;
-                }
                 index1 = i;
-                index2 = j;
-                if (N - number <= 0)
-                {
-                    flag = true;
-                    break;
-                }
-                N -= number;
-            }
-            if (flag == true)
-            {
                 break;
             }
+            N -= number;
+        }
+        for (int j = 0; j < 53; j++)
+        {
+            int number = 0;
+            if (this->root[index1][j] != TNULL && this->root[index1][j]->data[0] != '\0')
+            {
+                number = this->root[index1][j]->leftNo + this->root[index1][j]->rightNo + 1;
+            }
+            index2 = j;
+            if (N - number <= 0)
+            {
+                flag = true;
+                break;
+            }
+            N -= number;
         }
         if (flag == false)
         {
             return false;
         }
-        // remaining error handling
-        //
-        // pair<char *, char *> *val = getNHelper(this->root[index1][index2], N);
         NodePtr node = getTreeHelper(this->root[index1][index2], N);
-        // int *k = new int;
-        // *k = 0;
-        // inOrderHelper(this->root[index1][index2], k, N, key.data, value.data);
-        // return true;
         if (node)
         {
             strcpy(key.data, node->data);
@@ -713,47 +904,10 @@ public:
             return true;
         }
 
-        // key->size = strlen(node->data);
-        // value->size = strlen(node->value);
-
         return false;
     }
     bool del(int N)
     {
-
-        // int index1;
-        // int index2;
-        // bool flag = false;
-
-        // for (int i = 0; i < 52; i++)
-        // {
-        //     for (int j = 0; j < 53; j++)
-        //     {
-        //         int number = 0;
-        //         if (root[i][j] != TNULL)
-        //         {
-        //             number = root[i][j]->leftNo + root[i][j]->rightNo + 1;
-        //         }
-        //         index1 = i;
-        //         index2 = j;
-        //         if (N - number <= 0)
-        //         {
-        //             flag = true;
-        //             break;
-        //         }
-        //         N -= number;
-        //     }
-        //     if (flag == true)
-        //     {
-        //         break;
-        //     }
-        // }
-
-        // if (flag == false)
-        // {
-        //     return false;
-        // }
-
         Slice *key = new Slice;
         Slice *value = new Slice;
         key->data = new char[68];
@@ -868,7 +1022,7 @@ public:
 //         }
 //     }
 
-    // return 0;
+// return 0;
 // }
 
 // int main()
