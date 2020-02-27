@@ -74,6 +74,8 @@ int main() {
     int n = 1000000;
     char str1[n+1];
 
+    long double vector=0;
+    long double std=0;
     cin >> str1;
     // string str2 = printRandomString(n);
 
@@ -85,11 +87,8 @@ int main() {
 
     
     clock_gettime(CLOCK_MONOTONIC, &end);
-    double tdiff = (end.tv_sec - start.tv_sec) + 1e-9 * (end.tv_nsec - start.tv_nsec);
-    printf("time %f\n", tdiff);   
-
-    cout << ret << "\n";
-
+    long double tdiff = (end.tv_sec - start.tv_sec) + 1e-9 * (end.tv_nsec - start.tv_nsec);
+    vector+=tdiff;
 
     clock_gettime(CLOCK_MONOTONIC, &start);
     
@@ -97,5 +96,5 @@ int main() {
 
     clock_gettime(CLOCK_MONOTONIC, &end);
     tdiff = (end.tv_sec - start.tv_sec) + 1e-9 * (end.tv_nsec - start.tv_nsec);
-    printf("time %f\n", tdiff);
+    std+=tdiff;
 }

@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <time.h>
-#include "rbnew.cpp"
+#include "rbnewvectorized.cpp"
 using namespace std;
 char *random_key(int stringLength)
 {
@@ -301,17 +301,17 @@ int main()
 			// free(value.data);
 		}
 	}
-	if (incorrect == true)
-	{
-		cout << 0 << endl;
-		return 0;
-	}
-	// int threads = 4;
-
-	// pthread_t tid[threads];
-	// for (int i = 0; i < threads; i++)
+	// if (incorrect == true)
 	// {
-	// 	tid[i] = i;
+	// 	cout << 0 << endl;
+	// 	return 0;
+	// }
+	// // int threads = 4;
+
+	// // pthread_t tid[threads];
+	// // for (int i = 0; i < threads; i++)
+	// // {
+	// // 	tid[i] = i;
 	// 	pthread_create(&tid[i], NULL, myThreadFun, (void *)&tid[i]);
 	// }
 	// for (int i = 0; i < threads; i++)

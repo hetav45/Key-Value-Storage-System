@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <immintrin.h>
 
-void keycopy(char *a, char *b)
+void keycopy(char *b, char *a)
 {
     for (int i = 0; i < 2; i++)
     {
@@ -10,7 +10,7 @@ void keycopy(char *a, char *b)
     b[64] = '\0';
 }
 
-void valuecopy(char *a, char *b)
+void valuecopy(char *b, char *a)
 {
     for (int i = 0; i < 8; i++)
     {
@@ -18,3 +18,10 @@ void valuecopy(char *a, char *b)
     }
     b[256] = '\0';
 }
+// int main()
+// {
+//     char a[65];
+//     scanf("%s",a);
+//     char b[65];
+//     keycopy()
+// }
