@@ -812,7 +812,7 @@ public:
     }
     NodePtr alloc()
     {
-        if (len != 1000 && len != 0)
+        if (len != 1000 || len != 0)
         {
             return current[len++];
         }
