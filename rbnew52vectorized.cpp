@@ -812,13 +812,13 @@ public:
     }
     NodePtr alloc()
     {
-        if (len != 1000 || len != 0)
+        if (len != 10000 && len!=0)
         {
             return current[len++];
         }
         else
         {
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 10000; i++)
             {
                 current[i] = new Node;
             }

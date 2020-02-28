@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <time.h>
-#include "rbnewvectorized.cpp"
+#include "rbnew52vectorized.cpp"
 using namespace std;
 char *random_key(int stringLength)
 {
@@ -131,7 +131,7 @@ int num = 0;
 int main()
 {
 	srand(time(NULL));
-	for (int i = 0; i < 10000; i++)
+	for (int i = 0; i < 10000000; i++)
 	{
 		// cout<<"start"<<endl;
 		int k = rand() % 64 + 1;
@@ -153,7 +153,7 @@ int main()
 	//cout<<"after"<<endl;
 
 	bool incorrect = false;
-
+	return 0;
 	for (int i = 0; i < 10000; i++)
 	{
 		int x = rand() % 5;

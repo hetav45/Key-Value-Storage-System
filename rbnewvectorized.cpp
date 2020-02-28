@@ -1,13 +1,12 @@
+// Implementing Red-Black Tree in C++
 #include <bits/stdc++.h>
 #include <emmintrin.h>
 #include <immintrin.h>
 using namespace std;
-
 struct Node
 {
-    char data[65];
-    char value[257];
-
+    char *data;
+    char *value;
     Node *parent;
     Node *left;
     Node *right;
@@ -15,22 +14,22 @@ struct Node
     int rightNo;
     int color;
 };
-void keycopy(char *b, char *a)
+void keycopy(char *b, char *a, int n)
 {
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < n; i++)
     {
         _mm256_storeu_si256((__m256i *)&b[i * 32], _mm256_loadu_si256((const __m256i *)&a[i * 32]));
     }
-    b[64] = '\0';
+    b[n*32] = '\0';
 }
 
-void valuecopy(char *b, char *a)
+void valuecopy(char *b, char *a, int n)
 {
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < n; i++)
     {
         _mm256_storeu_si256((__m256i *)&b[i * 32], _mm256_loadu_si256((const __m256i *)&a[i * 32]));
     }
-    b[256] = '\0';
+    b[n*32] = '\0';
 }
 struct Slice
 {
@@ -96,6 +95,7 @@ class kvStore
 private:
     NodePtr root[52][53];
     NodePtr TNULL;
+    int no_of_element[55];
     void initializeNULLNode(NodePtr node, NodePtr parent)
     {
         node->parent = parent;
@@ -134,6 +134,21 @@ private:
         }
         return node->parent->right;
     }
+    // void inOrderHelper(NodePtr node, int *j, int k, char *key, char *value)
+    // {
+    //     if (node != TNULL)
+    //     {
+    //         inOrderHelper(node->left, j, k, key, value);
+    //         (*j)++;
+    //         if (*j == k)
+    //         {
+    //             strcpy(key, node->data);
+    //             strcpy(value, node->value);
+    //             return;
+    //         }
+    //         inOrderHelper(node->right, j, k, key, value);
+    //     }
+    // }
     void postOrderHelper(NodePtr node)
     {
         if (node != TNULL)
@@ -157,7 +172,6 @@ private:
     }
     NodePtr getTreeHelper(NodePtr node, int N)
     {
-        // printf("N = %d left = %d right = %d\n",N,node->leftNo,node->rightNo);
         if (node == TNULL || ((node->leftNo + 1) == N))
         {
             return node;
@@ -171,80 +185,80 @@ private:
             return getTreeHelper(node->left, N);
         }
     }
-    // void deleteFix(NodePtr x, int index1, int index2)
-    // {
-    //     NodePtr s;
-    //     while (x != root[index1][index2] && x->color == 0)
-    //     {
-    //         if (x == x->parent->left)
-    //         {
-    //             s = x->parent->right;
-    //             if (s == TNULL)
-    //                 break;
-    //             if (s->color == 1)
-    //             {
-    //                 s->color = 0;
-    //                 x->parent->color = 1;
-    //                 leftRotate(x->parent, index1, index2);
-    //                 s = x->parent->right;
-    //             }
-    //             else if (s->left->color == 0 && s->right->color == 0)
-    //             {
-    //                 s->color = 1;
-    //                 x = x->parent;
-    //             }
-    //             else
-    //             {
-    //                 if (s->right->color == 0)
-    //                 {
-    //                     s->left->color = 0;
-    //                     s->color = 1;
-    //                     rightRotate(s, index1, index2);
-    //                     s = x->parent->right;
-    //                 }
-    //                 s->color = x->parent->color;
-    //                 x->parent->color = 0;
-    //                 s->right->color = 0;
-    //                 leftRotate(x->parent, index1, index2);
-    //                 x = root[index1][index2];
-    //             }
-    //         }
-    //         else
-    //         {
-    //             s = x->parent->left;
-    //             if (s == TNULL)
-    //                 break;
-    //             if (s->color == 1)
-    //             {
-    //                 s->color = 0;
-    //                 x->parent->color = 1;
-    //                 rightRotate(x->parent, index1, index2);
-    //                 s = x->parent->left;
-    //             }
-    //             else if (s->right->color == 0 && s->right->color == 0)
-    //             {
-    //                 s->color = 1;
-    //                 x = x->parent;
-    //             }
-    //             else
-    //             {
-    //                 if (s->left->color == 0)
-    //                 {
-    //                     s->right->color = 0;
-    //                     s->color = 1;
-    //                     leftRotate(s, index1, index2);
-    //                     s = x->parent->left;
-    //                 }
-    //                 s->color = x->parent->color;
-    //                 x->parent->color = 0;
-    //                 s->left->color = 0;
-    //                 rightRotate(x->parent, index1, index2);
-    //                 x = root[index1][index2];
-    //             }
-    //         }
-    //     }
-    //     x->color = 0;
-    // }
+    void deleteFix(NodePtr x, int index1, int index2)
+    {
+        NodePtr s;
+        while (x != root[index1][index2] && x->color == 0)
+        {
+            if (x == x->parent->left)
+            {
+                s = x->parent->right;
+                if (s == TNULL)
+                    break;
+                if (s->color == 1)
+                {
+                    s->color = 0;
+                    x->parent->color = 1;
+                    leftRotate(x->parent, index1, index2);
+                    s = x->parent->right;
+                }
+                else if (s->left->color == 0 && s->right->color == 0)
+                {
+                    s->color = 1;
+                    x = x->parent;
+                }
+                else
+                {
+                    if (s->right->color == 0)
+                    {
+                        s->left->color = 0;
+                        s->color = 1;
+                        rightRotate(s, index1, index2);
+                        s = x->parent->right;
+                    }
+                    s->color = x->parent->color;
+                    x->parent->color = 0;
+                    s->right->color = 0;
+                    leftRotate(x->parent, index1, index2);
+                    x = root[index1][index2];
+                }
+            }
+            else
+            {
+                s = x->parent->left;
+                if (s == TNULL)
+                    break;
+                if (s->color == 1)
+                {
+                    s->color = 0;
+                    x->parent->color = 1;
+                    rightRotate(x->parent, index1, index2);
+                    s = x->parent->left;
+                }
+                else if (s->right->color == 0 && s->right->color == 0)
+                {
+                    s->color = 1;
+                    x = x->parent;
+                }
+                else
+                {
+                    if (s->left->color == 0)
+                    {
+                        s->right->color = 0;
+                        s->color = 1;
+                        leftRotate(s, index1, index2);
+                        s = x->parent->left;
+                    }
+                    s->color = x->parent->color;
+                    x->parent->color = 0;
+                    s->left->color = 0;
+                    rightRotate(x->parent, index1, index2);
+                    x = root[index1][index2];
+                }
+            }
+        }
+        x->color = 0;
+    }
     void rbTransplant(NodePtr u, NodePtr v, int index1, int index2)
     {
         if (u->parent == nullptr)
@@ -282,103 +296,202 @@ private:
         }
         if (z == TNULL)
         {
-            // cout << "Key not found in the tree" << endl;
             return NULL;
         }
         y = z;
         return y->value;
     }
-    // bool deleteNodeHelper(NodePtr node, char *key, int index1, int index2)
-    // {
-    //     NodePtr z = TNULL;
-    //     NodePtr x, y;
-    //     NodePtr temp = searchTreeHelper(node, key);
-    //     if (temp != TNULL)
-    //     {
-    //         while (node != TNULL)
-    //         {
-    //             if (sse42_strcmp(node->data, key) == 0)
-    //             {
-    //                 z = node;
-    //                 break;
-    //             }
-    //             if (sse42_strcmp(node->data, key) < 0)
-    //             {
-    //                 node->rightNo -= 1;
-    //                 node = node->right;
-    //             }
-    //             else
-    //             {
-    //                 node->leftNo -= 1;
-    //                 node = node->left;
-    //             }
-    //         }
-    //         while (node != TNULL)
-    //         {
-    //             if (sse42_strcmp(node->data, key) == 0)
-    //             {
-    //                 z = node;
-    //             }
-    //             if (sse42_strcmp(node->data, key) <= 0)
-    //             {
-    //                 node = node->right;
-    //             }
-    //             else
-    //             {
-    //                 node = node->left;
-    //             }
-    //         }
-    //         if (z == TNULL)
-    //         {
-    //             return false;
-    //         }
-    //         y = z;
-    //         int y_original_color = y->color;
-    //         if (z->left == TNULL)
-    //         {
-    //             x = z->right;
-    //             rbTransplant(z, z->right, index1, index2);
-    //         }
-    //         else if (z->right == TNULL)
-    //         {
-    //             x = z->left;
-    //             rbTransplant(z, z->left, index1, index2);
-    //         }
-    //         else
-    //         {
-    //             y = minimum(z->right);
-    //             y_original_color = y->color;
-    //             x = y->right;
-    //             if (y->parent == z)
-    //             {
-    //                 x->parent = y;
-    //             }
-    //             else
-    //             {
-    //                 rbTransplant(y, y->right, index1, index2);
-    //                 y->right = z->right;
-    //                 y->rightNo = z->rightNo - 1;
-    //                 y->right->parent = y;
-    //             }
-    //             rbTransplant(z, y, index1, index2);
-    //             y->left = z->left;
-    //             y->leftNo = z->leftNo;
-    //             y->left->parent = y;
-    //             y->color = z->color;
-    //         }
-    //         delete z;
-    //         if (y_original_color == 0)
-    //         {
+    NodePtr rbreplace(NodePtr x)
+    {
+        if (x->left != TNULL && x->right != TNULL)
+        {
+            return succ(x->right);
+        }
+        if (x->left == TNULL && x->right == TNULL)
+        {
+            return TNULL;
+        }
+        if (x->left != TNULL)
+        {
+            return x->left;
+        }
+        else
+        {
+            return x->right;
+        }
+    }
 
-    //             deleteFix(x, index1, index2);
-    //         }
-    //         return true;
-    //     }
-    //     else
-    //     {
-    //         return false;
-    //     }
-    // }
+    void fixdoubleblack(NodePtr x, int index1, int index2)
+    {
+        if (x == root[index1][index2])
+        {
+            return;
+        }
+        NodePtr sib = sibling(x);
+        NodePtr parent = x->parent;
+        if (sib == TNULL)
+        {
+            fixdoubleblack(parent, index1, index2);
+        }
+        else
+        {
+            if (sib->color == 1)
+            {
+                parent->color = 1;
+                sib->color = 0;
+                if (isonleft(sib))
+                {
+                    rightRotate(parent, index1, index2);
+                }
+                else
+                {
+                    leftRotate(parent, index1, index2);
+                }
+                fixdoubleblack(x, index1, index2);
+            }
+            else
+            {
+                if (hasredchild(sib))
+                {
+                    if (sib->left != TNULL and sib->left->color == 1)
+                    {
+                        if (isonleft(sib))
+                        {
+                            sib->left->color = sib->color;
+                            sib->color = parent->color;
+                            rightRotate(parent, index1, index2);
+                        }
+                        else
+                        {
+                            sib->left->color = sib->color;
+                            rightRotate(sib, index1, index2);
+                            leftRotate(parent, index1, index2);
+                        }
+                    }
+                    else
+                    {
+                        if (isonleft(sib))
+                        {
+                            sib->right->color = parent->color;
+                            leftRotate(sib, index1, index2);
+                            rightRotate(parent, index1, index2);
+                        }
+                        else
+                        {
+                            sib->right->color = sib->color;
+                            sib->color = parent->color;
+                            leftRotate(parent, index1, index2);
+                        }
+                    }
+                    parent->color = 0;
+                }
+                else
+                {
+                    sib->color = 1;
+                    if (parent->color == 0)
+                    {
+                        fixdoubleblack(parent, index1, index2);
+                    }
+                    else
+                    {
+                        parent->color = 0;
+                    }
+                }
+            }
+        }
+    }
+    bool deleteNodeHelper(NodePtr node, char *key, int index1, int index2)
+    {
+        NodePtr z = TNULL;
+        NodePtr x, y;
+        NodePtr temp = searchTreeHelper(node, key);
+        if (temp != TNULL)
+        {
+            no_of_element[index1]--;
+            while (node != TNULL)
+            {
+                if (sse42_strcmp(node->data, key) == 0)
+                {
+                    z = node;
+                    break;
+                }
+                if (sse42_strcmp(node->data, key) < 0)
+                {
+                    node->rightNo -= 1;
+                    node = node->right;
+                }
+                else
+                {
+                    node->leftNo -= 1;
+                    node = node->left;
+                }
+            }
+            while (node != TNULL)
+            {
+                if (sse42_strcmp(node->data, key) == 0)
+                {
+                    z = node;
+                }
+                if (sse42_strcmp(node->data, key) <= 0)
+                {
+                    node = node->right;
+                }
+                else
+                {
+                    node = node->left;
+                }
+            }
+            if (z == TNULL)
+            {
+                return false;
+            }
+            y = z;
+            int y_original_color = y->color;
+            if (z->left == TNULL)
+            {
+                x = z->right;
+                rbTransplant(z, z->right, index1, index2);
+            }
+            else if (z->right == TNULL)
+            {
+                x = z->left;
+                rbTransplant(z, z->left, index1, index2);
+            }
+            else
+            {
+                y = minimum(z->right);
+                y_original_color = y->color;
+                x = y->right;
+                if (y->parent == z)
+                {
+                    x->parent = y;
+                }
+                else
+                {
+                    rbTransplant(y, y->right, index1, index2);
+                    y->right = z->right;
+                    y->rightNo = z->rightNo - 1;
+                    y->right->parent = y;
+                }
+                rbTransplant(z, y, index1, index2);
+                y->left = z->left;
+                y->leftNo = z->leftNo;
+                y->left->parent = y;
+                y->color = z->color;
+            }
+            delete z;
+            if (y_original_color == 0)
+            {
+
+                deleteFix(x, index1, index2);
+            }
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
     void insertFix(NodePtr k, int index1, int index2)
     {
         NodePtr u;
@@ -471,7 +584,10 @@ public:
                 root[i][j] = TNULL;
             }
         }
-        // root = TNULL;
+        for (int i = 0; i < 53; i++)
+        {
+            no_of_element[i] = 0;
+        }
     }
     NodePtr current[1000];
     int len = 0;
@@ -583,6 +699,7 @@ public:
     }
     bool put(Slice &key, Slice &value)
     {
+
         int index1, index2;
         if (key.data[1] != '\0')
         {
@@ -597,10 +714,15 @@ public:
         NodePtr temp = searchTreeHelper(this->root[index1][index2], key.data);
         if (temp == TNULL)
         {
-            NodePtr node = alloc();
+            NodePtr node = new Node;
+            no_of_element[index1]++;
+            int k = ((key.size - 1) / 32 + 1);
+            int v = ((value.size - 1) / 32 + 1);
             node->parent = nullptr;
-            keycopy(node->data, key.data);
-            strcpy(node->value, value.data);
+            node->data = new char[k * 32 + 1];
+            node->value = new char[v * 32 + 1];
+            keycopy(node->data, key.data,k);
+            valuecopy(node->value, value.data,v);
             node->left = TNULL;
             node->right = TNULL;
             node->color = 1;
@@ -639,21 +761,28 @@ public:
             if (node->parent == nullptr)
             {
                 node->color = 0;
+
                 return false;
             }
             if (node->parent->parent == nullptr)
             {
+
                 return false;
             }
             insertFix(node, index1, index2);
+
             return false;
         }
         else
         {
-            NodePtr node = alloc();
+            NodePtr node = new Node;
+            int k = ((key.size - 1) / 32 + 1);
+            int v = ((value.size - 1) / 32 + 1);
             node->parent = nullptr;
-            keycopy(node->data, key.data);
-            strcpy(node->value, value.data);
+            node->data = new char[k * 32 + 1];
+            node->value = new char[v * 32 + 1];
+            keycopy(node->data, key.data,k);
+            valuecopy(node->value, value.data,v);
             node->left = TNULL;
             node->right = TNULL;
             node->color = 1;
@@ -670,7 +799,7 @@ public:
                 }
                 else if (sse42_strcmp(node->data, x->data) == 0)
                 {
-                    strcpy(y->value, value.data);
+                    valuecopy(node->value, value.data,((value.size - 1) / 32 + 1));
                     return true;
                 }
                 else
@@ -681,16 +810,15 @@ public:
             return false;
         }
     }
-
     NodePtr alloc()
     {
-        if (len != 1000 && len!=0)
+        if (len != 10000 && len!=0)
         {
             return current[len++];
         }
         else
         {
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 10000; i++)
             {
                 current[i] = new Node;
             }
@@ -711,167 +839,7 @@ public:
             index1 = code(data.data[0]);
             index2 = 0;
         }
-        // Delete Node Helper Copied
-        NodePtr z = TNULL;
-        NodePtr x, y;
-        NodePtr temp = searchTreeHelper(this->root[index1][index2], data.data);
-        NodePtr node = this->root[index1][index2];
-        if (temp != TNULL)
-        {
-            while (node != TNULL)
-            {
-                if (sse42_strcmp(node->data, data.data) == 0)
-                {
-                    z = node;
-                    break;
-                }
-                if (sse42_strcmp(node->data, data.data) < 0)
-                {
-                    node->rightNo -= 1;
-                    node = node->right;
-                }
-                else
-                {
-                    node->leftNo -= 1;
-                    node = node->left;
-                }
-            }
-            while (node != TNULL)
-            {
-                if (sse42_strcmp(node->data, data.data) == 0)
-                {
-                    z = node;
-                }
-                if (sse42_strcmp(node->data, data.data) <= 0)
-                {
-                    node = node->right;
-                }
-                else
-                {
-                    node = node->left;
-                }
-            }
-            if (z == TNULL)
-            {
-                return false;
-            }
-            y = z;
-            int y_original_color = y->color;
-            if (z->left == TNULL)
-            {
-                x = z->right;
-                rbTransplant(z, z->right, index1, index2);
-            }
-            else if (z->right == TNULL)
-            {
-                x = z->left;
-                rbTransplant(z, z->left, index1, index2);
-            }
-            else
-            {
-                y = minimum(z->right);
-                y_original_color = y->color;
-                x = y->right;
-                if (y->parent == z)
-                {
-                    x->parent = y;
-                }
-                else
-                {
-                    rbTransplant(y, y->right, index1, index2);
-                    y->right = z->right;
-                    y->rightNo = z->rightNo - 1;
-                    y->right->parent = y;
-                }
-                rbTransplant(z, y, index1, index2);
-                y->left = z->left;
-                y->leftNo = z->leftNo;
-                y->left->parent = y;
-                y->color = z->color;
-            }
-            delete z;
-            if (y_original_color == 0)
-            {
-                // deleteFix(x, index1, index2);
-
-                NodePtr s;
-                while (x != this->root[index1][index2] && x->color == 0)
-                {
-                    if (x == x->parent->left)
-                    {
-                        s = x->parent->right;
-                        if (s == TNULL)
-                            break;
-                        if (s->color == 1)
-                        {
-                            s->color = 0;
-                            x->parent->color = 1;
-                            leftRotate(x->parent, index1, index2);
-                            s = x->parent->right;
-                        }
-                        else if (s->left->color == 0 && s->right->color == 0)
-                        {
-                            s->color = 1;
-                            x = x->parent;
-                        }
-                        else
-                        {
-                            if (s->right->color == 0)
-                            {
-                                s->left->color = 0;
-                                s->color = 1;
-                                rightRotate(s, index1, index2);
-                                s = x->parent->right;
-                            }
-                            s->color = x->parent->color;
-                            x->parent->color = 0;
-                            s->right->color = 0;
-                            leftRotate(x->parent, index1, index2);
-                            x = root[index1][index2];
-                        }
-                    }
-                    else
-                    {
-                        s = x->parent->left;
-                        if (s == TNULL)
-                            break;
-                        if (s->color == 1)
-                        {
-                            s->color = 0;
-                            x->parent->color = 1;
-                            rightRotate(x->parent, index1, index2);
-                            s = x->parent->left;
-                        }
-                        else if (s->right->color == 0 && s->right->color == 0)
-                        {
-                            s->color = 1;
-                            x = x->parent;
-                        }
-                        else
-                        {
-                            if (s->left->color == 0)
-                            {
-                                s->right->color = 0;
-                                s->color = 1;
-                                leftRotate(s, index1, index2);
-                                s = x->parent->left;
-                            }
-                            s->color = x->parent->color;
-                            x->parent->color = 0;
-                            s->left->color = 0;
-                            rightRotate(x->parent, index1, index2);
-                            x = root[index1][index2];
-                        }
-                    }
-                }
-                x->color = 0;
-            }
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return deleteNodeHelper(this->root[index1][index2], data.data, index1, index2);
     }
     bool get(Slice &key, Slice &value)
     {
@@ -902,32 +870,33 @@ public:
     bool get(int N1, Slice &key, Slice &value)
     {
         int N = N1;
-        int index1;
-        int index2;
+        int index1 = 0;
+        int index2 = 0;
         bool flag = false;
         for (int i = 0; i < 52; i++)
         {
-            for (int j = 0; j < 53; j++)
+            int number = no_of_element[i];
+            if (N - number <= 0)
             {
-                int number = 0;
-                if (this->root[i][j] != TNULL && this->root[i][j]->data[0] != '\0')
-                {
-                    // printf("i=%d j=%d\n",i,j);
-                    number = this->root[i][j]->leftNo + this->root[i][j]->rightNo + 1;
-                }
                 index1 = i;
-                index2 = j;
-                if (N - number <= 0)
-                {
-                    flag = true;
-                    break;
-                }
-                N -= number;
-            }
-            if (flag == true)
-            {
                 break;
             }
+            N -= number;
+        }
+        for (int j = 0; j < 53; j++)
+        {
+            int number = 0;
+            if (this->root[index1][j] != TNULL && this->root[index1][j]->data[0] != '\0')
+            {
+                number = this->root[index1][j]->leftNo + this->root[index1][j]->rightNo + 1;
+            }
+            index2 = j;
+            if (N - number <= 0)
+            {
+                flag = true;
+                break;
+            }
+            N -= number;
         }
         if (flag == false)
         {
@@ -936,10 +905,11 @@ public:
         NodePtr node = getTreeHelper(this->root[index1][index2], N);
         if (node)
         {
-            keycopy(key.data, node->data);
+            strcpy(key.data, node->data);
             strcpy(value.data, node->value);
             return true;
         }
+
         return false;
     }
     bool del(int N)
@@ -967,7 +937,6 @@ public:
         }
     }
 };
-
 // int main()
 // {
 //     kvStore bst;
@@ -1011,7 +980,7 @@ public:
 //     {
 //         scanf("%s", op);
 
-//         if (sse42_strcmp(op, "put") == 0)
+//         if (strcmp(op, "put") == 0)
 //         {
 //             scanf("%s", a->data);
 //             scanf("%s", b->data);
@@ -1019,7 +988,7 @@ public:
 //             bool ret = kv.put(*a, *b);
 //             printf("ret - %d\n", ret);
 //         }
-//         else if (sse42_strcmp(op, "get") == 0)
+//         else if (strcmp(op, "get") == 0)
 //         {
 //             scanf("%s", a->data);
 //             bool ret = kv.get(*a, *b);
@@ -1030,7 +999,7 @@ public:
 //             else
 //                 printf("ret - %d\tval - %s\n", ret, b->data);
 //         }
-//         else if (sse42_strcmp(op, "getn") == 0)
+//         else if (strcmp(op, "getn") == 0)
 //         {
 //             int index;
 //             scanf("%d", &index);
@@ -1040,20 +1009,20 @@ public:
 //             else
 //                 printf("ret - %d\tkey - %s\tval - %s\n", ret, a->data, b->data);
 //         }
-//         else if (sse42_strcmp(op, "del") == 0)
+//         else if (strcmp(op, "del") == 0)
 //         {
 //             scanf("%s", a->data);
 //             bool ret = kv.del(*a);
 //             printf("ret - %d\n", ret);
 //         }
-//         else if (sse42_strcmp(op, "deln") == 0)
+//         else if (strcmp(op, "deln") == 0)
 //         {
 //             int index;
 //             scanf("%d", &index);
 //             bool ret = kv.del(index);
 //             printf("ret - %d\n", ret);
 //         }
-//         else if (sse42_strcmp(op, "exit") == 0)
+//         else if (strcmp(op, "exit") == 0)
 //         {
 //             break;
 //         }
