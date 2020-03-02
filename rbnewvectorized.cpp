@@ -589,7 +589,7 @@ public:
             no_of_element[i] = 0;
         }
     }
-    NodePtr current[1000];
+    NodePtr current;
     int len = 0;
     NodePtr succ(NodePtr x)
     {
@@ -714,7 +714,7 @@ public:
         NodePtr temp = searchTreeHelper(this->root[index1][index2], key.data);
         if (temp == TNULL)
         {
-            NodePtr node = new Node;
+            NodePtr node = alloc();
             no_of_element[index1]++;
             int k = ((key.size - 1) / 32 + 1);
             int v = ((value.size - 1) / 32 + 1);
@@ -775,7 +775,7 @@ public:
         }
         else
         {
-            NodePtr node = new Node;
+            NodePtr node = alloc();
             int k = ((key.size - 1) / 32 + 1);
             int v = ((value.size - 1) / 32 + 1);
             node->parent = nullptr;
@@ -812,18 +812,15 @@ public:
     }
     NodePtr alloc()
     {
-        if (len != 10000 && len!=0)
+        if (len != 1000 && len!=0)
         {
-            return current[len++];
+            return &current[len++];
         }
         else
         {
-            for (int i = 0; i < 10000; i++)
-            {
-                current[i] = new Node;
-            }
+            current = new Node[1000];
             len = 0;
-            return current[len++];
+            return &current[len++];
         }
     }
     bool del(Slice &data)
