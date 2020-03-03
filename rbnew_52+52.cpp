@@ -1,4 +1,5 @@
 // Implementing Red-Black Tree in C++
+#include <pthread.h>
 #include <bits/stdc++.h>
 using namespace std;
 struct Node
@@ -22,6 +23,10 @@ class kvStore
 {
 private:
     NodePtr root[52][53];
+    pthread_mutex_t mutex[52][53];
+    pthread_mutex_t mutex_no;
+    pthread_mutex_t mutex_global;
+
     NodePtr TNULL;
     int no_of_element[55];
     void initializeNULLNode(NodePtr node, NodePtr parent)
@@ -426,7 +431,12 @@ private:
         NodePtr temp = searchTreeHelper(node, key);
         if (temp != TNULL)
         {
+            pthread_mutex_lock(&mutex_no);
+
             no_of_element[index1]--;
+
+            pthread_mutex_unlock(&mutex_no);
+
             while (node != TNULL)
             {
                 if (strcmp(node->data, key) == 0)
@@ -603,7 +613,29 @@ public:
                 root[i][j] = TNULL;
             }
         }
-        for(int i=0; i < 53; i++)
+
+        //init mutex locks
+        pthread_mutex_init(&mutex_global, NULL);
+
+        if (pthread_mutex_init(&mutex_no, NULL))
+        {
+            printf("error initiating mutex locks\n");
+            exit(1);
+        }
+
+        for (int i = 0; i < 52; i++)
+        {
+
+            for (int j = 0; j < 53; j++)
+            {
+                if (pthread_mutex_init(&mutex[i][j], NULL))
+                {
+                    printf("error initiating mutex locks\n");
+                    exit(1);
+                }
+            }
+        }
+        for (int i = 0; i < 53; i++)
         {
             no_of_element[i] = 0;
         }
@@ -716,6 +748,7 @@ public:
     }
     bool put(Slice &key, Slice &value)
     {
+        // pthread_mutex_lock(&mutex_global);
 
         int index1, index2;
         if (key.data[1] != '\0')
@@ -728,11 +761,23 @@ public:
             index1 = code(key.data[0]);
             index2 = 0;
         }
+        if (index1 < 0 || index2 < 0)
+        {
+            // cout << "index error" << endl;
+            // pthread_mutex_unlock(&mutex_global);
+
+            return false;
+        }
+
+        pthread_mutex_lock(&mutex[index1][index2]);
+
         NodePtr temp = searchTreeHelper(this->root[index1][index2], key.data);
         if (temp == TNULL)
         {
             NodePtr node = new Node;
+            pthread_mutex_lock(&mutex_no);
             no_of_element[index1]++;
+            pthread_mutex_unlock(&mutex_no);
             node->parent = nullptr;
             strcpy(node->data, key.data);
             strcpy(node->value, value.data);
@@ -775,15 +820,22 @@ public:
             {
                 node->color = 0;
 
+                pthread_mutex_unlock(&mutex[index1][index2]);
+                // pthread_mutex_unlock(&mutex_global);
+
                 return false;
             }
             if (node->parent->parent == nullptr)
             {
 
+                pthread_mutex_unlock(&mutex[index1][index2]);
+                // pthread_mutex_unlock(&mutex_global);
                 return false;
             }
             insertFix(node, index1, index2);
 
+            pthread_mutex_unlock(&mutex[index1][index2]);
+            // pthread_mutex_unlock(&mutex_global);
             return false;
         }
         else
@@ -809,6 +861,8 @@ public:
                 else if (strcmp(node->data, x->data) == 0)
                 {
                     strcpy(y->value, value.data);
+                    pthread_mutex_unlock(&mutex[index1][index2]);
+                    // pthread_mutex_unlock(&mutex_global);
                     return true;
                 }
                 else
@@ -816,12 +870,16 @@ public:
                     x = x->right;
                 }
             }
+            pthread_mutex_unlock(&mutex[index1][index2]);
+            // pthread_mutex_unlock(&mutex_global);
             return false;
         }
     }
 
     bool del(Slice &data)
     {
+        // pthread_mutex_lock(&mutex_global);
+
         int index1, index2;
         if (data.data[1] != '\0')
         {
@@ -833,10 +891,27 @@ public:
             index1 = code(data.data[0]);
             index2 = 0;
         }
-        return deleteNodeHelper(this->root[index1][index2], data.data, index1, index2);
+
+        if (index1 < 0 || index2 < 0)
+        {
+            // cout << "index error" << endl;
+            // pthread_mutex_unlock(&mutex_global);
+            return false;
+        }
+        pthread_mutex_lock(&mutex[index1][index2]);
+
+        bool ret = deleteNodeHelper(this->root[index1][index2], data.data, index1, index2);
+
+        pthread_mutex_unlock(&mutex[index1][index2]);
+
+        // pthread_mutex_unlock(&mutex_global);
+
+        return ret;
     }
     bool get(Slice &key, Slice &value)
     {
+        // pthread_mutex_lock(&mutex_global);
+
         int index1, index2;
         if (key.data[1] != '\0')
         {
@@ -848,10 +923,27 @@ public:
             index1 = code(key.data[0]);
             index2 = 0;
         }
+
+        if (index1 < 0 || index2 < 0)
+        {
+            // cout << "index error" << endl;
+            // pthread_mutex_unlock(&mutex_global);
+            return false;
+        }
+        pthread_mutex_lock(&mutex[index1][index2]);
+
         NodePtr temp = searchTreeHelper(this->root[index1][index2], key.data);
         if (temp == TNULL)
+        {
+            pthread_mutex_unlock(&mutex[index1][index2]);
+
+            // pthread_mutex_unlock(&mutex_global);
             return false;
+        }
         value.data = temp->value;
+        pthread_mutex_unlock(&mutex[index1][index2]);
+
+        // pthread_mutex_unlock(&mutex_global);
         return true;
     }
     void printTree(int index1, int index2)
@@ -863,13 +955,21 @@ public:
     }
     bool get(int N1, Slice &key, Slice &value)
     {
+
+        // pthread_mutex_lock(&mutex_global);
+
         int N = N1;
         int index1 = 0;
         int index2 = 0;
         bool flag = false;
         for (int i = 0; i < 52; i++)
         {
+            pthread_mutex_lock(&mutex_no);
+
             int number = no_of_element[i];
+
+            pthread_mutex_unlock(&mutex_no);
+
             if (N - number <= 0)
             {
                 index1 = i;
@@ -879,11 +979,16 @@ public:
         }
         for (int j = 0; j < 53; j++)
         {
+            pthread_mutex_lock(&mutex[index1][j]);
+
             int number = 0;
             if (this->root[index1][j] != TNULL && this->root[index1][j]->data[0] != '\0')
             {
                 number = this->root[index1][j]->leftNo + this->root[index1][j]->rightNo + 1;
             }
+
+            pthread_mutex_unlock(&mutex[index1][j]);
+
             index2 = j;
             if (N - number <= 0)
             {
@@ -894,16 +999,29 @@ public:
         }
         if (flag == false)
         {
+            // pthread_mutex_unlock(&mutex_global);
             return false;
         }
+
+        if (index1 < 0 || index2 < 0)
+        {
+            // cout << "index error" << endl;
+            // pthread_mutex_unlock(&mutex_global);
+            return false;
+        }
+        pthread_mutex_lock(&mutex[index1][index2]);
         NodePtr node = getTreeHelper(this->root[index1][index2], N);
         if (node)
         {
             strcpy(key.data, node->data);
             strcpy(value.data, node->value);
+            pthread_mutex_unlock(&mutex[index1][index2]);
+            // pthread_mutex_unlock(&mutex_global);
             return true;
         }
 
+        pthread_mutex_unlock(&mutex[index1][index2]);
+        // pthread_mutex_unlock(&mutex_global);
         return false;
     }
     bool del(int N)
@@ -925,10 +1043,29 @@ public:
         {
             return (val - 65);
         }
-        else
+        else if (val > 96 && val < 123)
         {
             return (val - 97) + 26;
         }
+        else
+        {
+            // since for index2 we add 1 to the return value
+            return -2;
+        }
+    }
+
+    void debug()
+    {
+        // for (int i = 0; i < 52; i++)
+        // {
+            int i = 0;
+            for (int j = 0; j < 53; j++)
+            {    
+                cout << i << ' ' << j << endl;
+                printTree(i, j);
+            }
+            cout << endl;
+        // }
     }
 };
 // int main()
