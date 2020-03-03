@@ -432,10 +432,13 @@ private:
         if (temp != TNULL)
         {
             pthread_mutex_lock(&mutex_no);
+            // printf("no lock acquired\n");
 
             no_of_element[index1]--;
 
             pthread_mutex_unlock(&mutex_no);
+            // printf("no lock given\n");
+
 
             while (node != TNULL)
             {
@@ -776,8 +779,12 @@ public:
         {
             NodePtr node = new Node;
             pthread_mutex_lock(&mutex_no);
+            // printf("no lock acquired in put\n");
+
             no_of_element[index1]++;
             pthread_mutex_unlock(&mutex_no);
+            // printf("no lock given in put\n");
+
             node->parent = nullptr;
             strcpy(node->data, key.data);
             strcpy(node->value, value.data);
@@ -898,11 +905,13 @@ public:
             // pthread_mutex_unlock(&mutex_global);
             return false;
         }
+        pthread_mutex_lock(&mutex_global);
         pthread_mutex_lock(&mutex[index1][index2]);
 
         bool ret = deleteNodeHelper(this->root[index1][index2], data.data, index1, index2);
-
         pthread_mutex_unlock(&mutex[index1][index2]);
+
+        pthread_mutex_unlock(&mutex_global);
 
         // pthread_mutex_unlock(&mutex_global);
 

@@ -714,7 +714,7 @@ public:
         NodePtr temp = searchTreeHelper(this->root[index1][index2], key.data);
         if (temp == TNULL)
         {
-            NodePtr node = alloc();
+            NodePtr node = new Node;
             no_of_element[index1]++;
             int k = ((key.size - 1) / 32 + 1);
             int v = ((value.size - 1) / 32 + 1);
@@ -775,7 +775,7 @@ public:
         }
         else
         {
-            NodePtr node = alloc();
+            NodePtr node = new Node;
             int k = ((key.size - 1) / 32 + 1);
             int v = ((value.size - 1) / 32 + 1);
             node->parent = nullptr;
