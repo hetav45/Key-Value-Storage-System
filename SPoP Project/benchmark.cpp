@@ -2,7 +2,7 @@
 #include <unistd.h> 
 #include <pthread.h>
 #include <time.h>
-#include "kvStore.cpp"
+#include "rbnew_52+52.cpp"
 using namespace std;
 
 string sliceToStr(Slice& a) {
@@ -34,7 +34,7 @@ string random_key(int stringLength){
 string random_value(int stringLength){
 	string v = "";
 	string letters = "";
-	for(int i = 32;i<=127;i++)letters+=char(i);
+	for(int i = 32;i<127;i++)letters+=char(i);
 
 	for(int i=0;i<stringLength;i++)
 		v = v + letters[rand()%96];
@@ -43,8 +43,7 @@ string random_value(int stringLength){
 }
 
 long CLOCKS_PER_SECOND = 1000000;
-// made change here
-kvStore kv;
+kvStore kv(10000000);
 map<string,string> db;
 long long db_size = 0;
 
@@ -120,17 +119,7 @@ void *myThreadFun(void *vargp)
 
 int main()
 {
-	srand(time(NULL));
-
-	struct timespec ts;
-	clock_gettime(CLOCK_MONOTONIC_RAW,&ts);
-	long double st=ts.tv_nsec/(1e9)+ts.tv_sec;
-
-	long double putt = 0;
-
-	int vall = 1e5;
-
-	for(int i=0;i<vall;i++)
+	for(int i=0;i<100000;i++)
 	{
 		string key = random_key(rand()%64 + 1);
 		string value = random_value(rand()%255 + 1);
@@ -138,29 +127,15 @@ int main()
 		Slice k,v;
 		strToSlice(key,k);
 		strToSlice(value,v);
-		timespec ts;
-		clock_gettime(CLOCK_MONOTONIC_RAW,&ts);
-		long double st1=ts.tv_nsec/(1e9)+ts.tv_sec;
 		kv.put(k,v);
-		clock_gettime(CLOCK_MONOTONIC_RAW,&ts);
-		long double en1=ts.tv_nsec/(1e9)+ts.tv_sec;
-		putt += en1 - st1;
 		db_size = db.size();
 	}
 
-	printf("%d put calls time = %Lf\n",vall,putt);
-	// return 0;
 	bool incorrect = false;
 
-	for(int i=0;i<100000;i++)
+	for(int i=0;i<10000;i++)
 	{
 		int x = rand()%5;
-		printf("%d\n",i);
-		// // x=1;
-		// if(x==0)
-		// 	x=1;
-		// else x=2;
-
 		if(x==0)
 		{
 			string key = random_key(rand()%64 + 1);
@@ -170,12 +145,6 @@ int main()
 			map<string,string>:: iterator itr = db.find(key);
 			if((ans==false && itr != db.end()) || (ans==true && itr->second != sliceToStr(s_value) ))
 				incorrect = true;
-				if(incorrect == true)
-					{
-						printf("wrong %d\n",x);
-						sleep(1000);
-						break;
-					}
 		}
 		else if(x==1)
 		{
@@ -194,12 +163,6 @@ int main()
 			db_size = db.size();
 			if(check2 == false || value != sliceToStr(check))
 				incorrect = true;
-				if(incorrect == true)
-					{
-						printf("wrong  %d\n",x);
-						sleep(1000);
-						break;
-					}
 		}
 		else if(x==2)
 		{
@@ -216,12 +179,6 @@ int main()
 			bool check2 = kv.get(s_key,s_value);
 			if(check2 == true)
 				incorrect = true;
-				if(incorrect == true)
-					{
-						printf("wrong  %d\n",x);
-						sleep(1000);
-						break;
-					}
 		}
 		else if(x==3)
 		{
@@ -232,13 +189,6 @@ int main()
 			for(int i=0;i<rem;i++)itr++;
 			if( itr->first != sliceToStr(s_key) || itr->second != sliceToStr(s_value))
 				incorrect = true;
-				if(incorrect == true)
-					{
-						printf("wrong  %d\n",x);
-						sleep(1000);
-						break;
-					}
-
 		}
 		else if(x==4)
 		{
@@ -254,22 +204,11 @@ int main()
 			bool check2 = kv.get(s_key,s_value);
 			if(check2 == true)
 				incorrect = true;
-				if(incorrect == true)
-					{
-						printf("wrong  %d\n",x);
-						sleep(1000);
-						break;
-					}
-
 		}
 	}
-	return 0;
 	if(incorrect == true)
 	{
 		cout<<0<<endl;
-		clock_gettime(CLOCK_MONOTONIC_RAW,&ts);
-		long double en=ts.tv_nsec/(1e9)+ts.tv_sec;
-		printf("Total Time = %Lf\n",en-st);
 		return 0;
 	}
 	int threads = 4;
@@ -282,10 +221,5 @@ int main()
 	}
 	for(int i=0;i<threads;i++)
 		pthread_join(tid[i],NULL);
-
-	clock_gettime(CLOCK_MONOTONIC_RAW,&ts);
-	long double en=ts.tv_nsec/(1e9)+ts.tv_sec;
-	printf("Total Time = %Lf\n",en-st);
-
 	return 0;
 }
