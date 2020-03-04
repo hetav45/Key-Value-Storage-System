@@ -756,7 +756,7 @@ public:
         // pthread_mutex_lock(&mutex_global);
 
         int index1, index2;
-        if (key.data[1] != '\0')
+        if (key.size != 1)
         {
             index1 = code(key.data[0]);
             index2 = code(key.data[1]) + 1;
@@ -790,6 +790,8 @@ public:
             node->parent = nullptr;
             strncpy(node->data, key.data,key.size);
             strncpy(node->value, value.data,value.size);
+            node->data[key.size]=0;
+            node->value[value.size]=0;
             node->key_size=key.size;
             node->value_size=value.size;
 
@@ -856,6 +858,9 @@ public:
             node->parent = nullptr;
             strncpy(node->data, key.data,key.size);
             strncpy(node->value, value.data,value.size);
+            node->data[key.size]=0;
+            node->value[value.size]=0;
+
             node->key_size=key.size;
             node->value_size=value.size;
 
@@ -876,6 +881,8 @@ public:
                 else if (strcmp(node->data, x->data) == 0)
                 {
                     strncpy(y->value, value.data,value.size);
+                    y->value_size=value.size;
+                    y->value[value.size]=0;
                     pthread_mutex_unlock(&mutex[index1][index2]);
                     // pthread_mutex_unlock(&mutex_global);
                     return true;
@@ -893,17 +900,20 @@ public:
 
     bool del(Slice &data)
     {
+        char * key1 = (char *) malloc(data.size+1);
+        strncpy(key1,data.data,data.size);
+        key1[data.size]=0;
         // pthread_mutex_lock(&mutex_global);
 
         int index1, index2;
-        if (data.data[1] != '\0')
+        if (key1[1] != '\0')
         {
-            index1 = code(data.data[0]);
-            index2 = code(data.data[1]) + 1;
+            index1 = code(key1[0]);
+            index2 = code(key1[1]) + 1;
         }
         else
         {
-            index1 = code(data.data[0]);
+            index1 = code(key1[0]);
             index2 = 0;
         }
 
@@ -916,7 +926,7 @@ public:
         pthread_mutex_lock(&mutex_global);
         pthread_mutex_lock(&mutex[index1][index2]);
 
-        bool ret = deleteNodeHelper(this->root[index1][index2], data.data, index1, index2);
+        bool ret = deleteNodeHelper(this->root[index1][index2],key1, index1, index2);
         pthread_mutex_unlock(&mutex[index1][index2]);
 
         pthread_mutex_unlock(&mutex_global);
@@ -927,19 +937,21 @@ public:
     }
     bool get(Slice &key, Slice &value)
     {
-        value.data = (char *)malloc(value.size*(sizeof(char)));
+        char *key1 = (char *)malloc((key.size+1)*(sizeof(char)));
+        strncpy(key1,key.data,key.size);
+        key1[key.size]=0;
         //  malloc()
         // pthread_mutex_lock(&mutex_global);
 
         int index1, index2;
-        if (key.data[1] != '\0')
+        if (key1[1] != '\0')
         {
-            index1 = code(key.data[0]);
-            index2 = code(key.data[1]) + 1;
+            index1 = code(key1[0]);
+            index2 = code(key1[1]) + 1;
         }
         else
         {
-            index1 = code(key.data[0]);
+            index1 = code(key1[0]);
             index2 = 0;
         }
 
@@ -951,7 +963,7 @@ public:
         }
         pthread_mutex_lock(&mutex[index1][index2]);
 
-        NodePtr temp = searchTreeHelper(this->root[index1][index2], key.data);
+        NodePtr temp = searchTreeHelper(this->root[index1][index2], key1);
         if (temp == TNULL)
         {
             pthread_mutex_unlock(&mutex[index1][index2]);
@@ -959,8 +971,10 @@ public:
             // pthread_mutex_unlock(&mutex_global);
             return false;
         }
+        value.data=(char *)malloc(temp->value_size+1);
         value.data = temp->value;
         value.size = temp->value_size;
+        // printf("%d supplied %d noded\n",value.size,temp->value_size);
         pthread_mutex_unlock(&mutex[index1][index2]);
 
         // pthread_mutex_unlock(&mutex_global);
@@ -1017,6 +1031,7 @@ public:
             }
             N -= number;
         }
+        // printf("Index1 Index2 %d %d \n",index1,index2);
         if (flag == false)
         {
             // pthread_mutex_unlock(&mutex_global);
@@ -1036,10 +1051,11 @@ public:
         {
             key.size=node->key_size;
             value.size=node->value_size;
-            key.data=(char *)(malloc(sizeof(char) * key.size));
-            value.data=(char*)(malloc(sizeof(char)*value.size));
+            key.data=(char *)(malloc(1+ key.size));
+            value.data=(char*)(malloc(1+value.size));
             strncpy(key.data, node->data,node->key_size);
             strncpy(value.data, node->value,node->value_size);
+
             
             pthread_mutex_unlock(&mutex[index1][index2]);
             // pthread_mutex_unlock(&mutex_global);
