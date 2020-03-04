@@ -154,7 +154,7 @@ int main()
 
 	for(int i=0;i<0;i++)
 	{
-		int x = rand()%2+3;
+		int x = rand()%3;
 		printf("%d\n",i);
 		// // x=1;
 		// if(x==0)
@@ -223,45 +223,45 @@ int main()
 						break;
 					}
 		}
-		else if(x==3)
-		{
-			int rem = rand()%db_size;
-			Slice s_key,s_value;
-			bool check = kv.get(rem,s_key,s_value);
-			map<string,string>:: iterator itr = db.begin();
-			for(int i=0;i<rem;i++)itr++;
-			if( itr->first != sliceToStr(s_key) || itr->second != sliceToStr(s_value))
-				incorrect = true;
-				if(incorrect == true)
-					{
-						printf("wrong  %d\n",x);
-						sleep(1000);
-						break;
-					}
+	// 	else if(x==3)
+	// 	{
+	// 		int rem = rand()%db_size;
+	// 		Slice s_key,s_value;
+	// 		bool check = kv.get(rem,s_key,s_value);
+	// 		map<string,string>:: iterator itr = db.begin();
+	// 		for(int i=0;i<rem;i++)itr++;
+	// 		if( itr->first != sliceToStr(s_key) || itr->second != sliceToStr(s_value))
+	// 			incorrect = true;
+	// 			if(incorrect == true)
+	// 				{
+	// 					printf("wrong  %d\n",x);
+	// 					sleep(1000);
+	// 					break;
+	// 				}
 
-		}
-		else if(x==4)
-		{
-			int rem = rand()%db_size;
-			map<string,string>:: iterator itr = db.begin();
-			for(int i=0;i<rem;i++)itr++;
-			string key = itr->first;
-			bool check = kv.del(rem);
-			db.erase(itr);
-			db_size--;
-			Slice s_key,s_value;
-			strToSlice(key,s_key);
-			bool check2 = kv.get(s_key,s_value);
-			if(check2 == true)
-				incorrect = true;
-				if(incorrect == true)
-					{
-						printf("wrong  %d\n",x);
-						sleep(1000);
-						break;
-					}
+	// 	}
+	// 	else if(x==4)
+	// 	{
+	// 		int rem = rand()%db_size;
+	// 		map<string,string>:: iterator itr = db.begin();
+	// 		for(int i=0;i<rem;i++)itr++;
+	// 		string key = itr->first;
+	// 		bool check = kv.del(rem);
+	// 		db.erase(itr);
+	// 		db_size--;
+	// 		Slice s_key,s_value;
+	// 		strToSlice(key,s_key);
+	// 		bool check2 = kv.get(s_key,s_value);
+	// 		if(check2 == true)
+	// 			incorrect = true;
+	// 			if(incorrect == true)
+	// 				{
+	// 					printf("wrong  %d\n",x);
+	// 					sleep(1000);
+	// 					break;
+	// 				}
 
-		}
+	// 	}
 	}
 	// return 0;
 	if(incorrect == true)
