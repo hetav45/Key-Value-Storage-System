@@ -95,6 +95,7 @@ private:
     }
     NodePtr searchTreeHelper(NodePtr node, char *key)
     {
+        printf("Insearh *%s* *%s*\n",node->data,key);
         if (node == TNULL || strcmp(key, node->data) == 0)
         {
             return node;
@@ -773,10 +774,11 @@ public:
 
             return false;
         }
-
+        char * key1 = (char *)(malloc(key.size+1));
+        strncpy(key1,key.data,key.size);
+        key1[key.size]=0;
         pthread_mutex_lock(&mutex[index1][index2]);
-
-        NodePtr temp = searchTreeHelper(this->root[index1][index2], key.data);
+        NodePtr temp = searchTreeHelper(this->root[index1][index2], key1);
         if (temp == TNULL)
         {
             NodePtr node = new Node;
@@ -925,7 +927,7 @@ public:
         }
         pthread_mutex_lock(&mutex_global);
         pthread_mutex_lock(&mutex[index1][index2]);
-
+        printf("Index 1 %d index 2 %d for key: %s\n",index1,index2,data.data);
         bool ret = deleteNodeHelper(this->root[index1][index2],key1, index1, index2);
         pthread_mutex_unlock(&mutex[index1][index2]);
 
@@ -962,7 +964,7 @@ public:
             return false;
         }
         pthread_mutex_lock(&mutex[index1][index2]);
-
+        printf("Index 1 %d index 2 %d for key: *%s* *%s*\n",index1,index2,key.data,key1);
         NodePtr temp = searchTreeHelper(this->root[index1][index2], key1);
         if (temp == TNULL)
         {

@@ -156,6 +156,11 @@ int main()
 	{
 		int x = rand()%5;
 		printf("%d\n",i);
+		// // x=1;
+		// if(x==0)
+		// 	x=1;
+		// else x=2;
+
 		if(x==0)
 		{
 			string key = random_key(rand()%64 + 1);
@@ -195,7 +200,6 @@ int main()
 						sleep(1000);
 						break;
 					}
-
 		}
 		else if(x==2)
 		{
@@ -218,7 +222,6 @@ int main()
 						sleep(1000);
 						break;
 					}
-
 		}
 		else if(x==3)
 		{
