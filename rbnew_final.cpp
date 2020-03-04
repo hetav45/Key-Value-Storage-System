@@ -1,12 +1,13 @@
 // Implementing Red-Black Tree in C++
+#include <pthread.h>
 #include <bits/stdc++.h>
-#include <emmintrin.h>
-#include <immintrin.h>
 using namespace std;
 struct Node
 {
     char data[68];
     char value[260];
+    int key_size;
+    int value_size;
     Node *parent;
     Node *left;
     Node *right;
@@ -19,65 +20,17 @@ struct Slice
     uint8_t size;
     char *data;
 };
-int sse42_strcmp(const char *s1, const char *s2)
-{
-
-    if (s1 == s2)
-    {
-        return 0;
-    }
-
-    __m128i *ptr1 = reinterpret_cast<__m128i *>(const_cast<char *>(s1));
-    __m128i *ptr2 = reinterpret_cast<__m128i *>(const_cast<char *>(s2));
-
-    for (/**/; /**/; ptr1++, ptr2++)
-    {
-
-        const __m128i a = _mm_loadu_si128(ptr1);
-        const __m128i b = _mm_loadu_si128(ptr2);
-
-        const uint8_t mode =
-            _SIDD_UBYTE_OPS |
-            _SIDD_CMP_EQUAL_EACH |
-            _SIDD_NEGATIVE_POLARITY |
-            _SIDD_LEAST_SIGNIFICANT;
-
-        if (_mm_cmpistrc(a, b, mode))
-        {
-            // a & b are different (not counting past-zero bytes)
-            const auto idx = _mm_cmpistri(a, b, mode);
-
-            const uint8_t b1 = (reinterpret_cast<char *>(ptr1))[idx];
-            const uint8_t b2 = (reinterpret_cast<char *>(ptr2))[idx];
-
-            if (b1 < b2)
-            {
-                return -1;
-            }
-            else if (b1 > b2)
-            {
-                return +1;
-            }
-            else
-            {
-                return 0;
-            }
-        }
-        else if (_mm_cmpistrz(a, b, mode))
-        {
-            // a & b are same, but b contains a zero byte
-            break;
-        }
-    }
-
-    return 0;
-}
 typedef Node *NodePtr;
 class kvStore
 {
 private:
     NodePtr root[52][53];
+    pthread_mutex_t mutex[52][53];
+    pthread_mutex_t mutex_no;
+    pthread_mutex_t mutex_global;
+
     NodePtr TNULL;
+    int no_of_element[55];
     void initializeNULLNode(NodePtr node, NodePtr parent)
     {
         node->parent = parent;
@@ -116,6 +69,21 @@ private:
         }
         return node->parent->right;
     }
+    void inOrderHelper(NodePtr node, int *j, int k, char *key, char *value)
+    {
+        if (node != TNULL)
+        {
+            inOrderHelper(node->left, j, k, key, value);
+            (*j)++;
+            if (*j == k)
+            {
+                strncpy(key, node->data,node->key_size);
+                strncpy(value, node->value,node->value_size);
+                return;
+            }
+            inOrderHelper(node->right, j, k, key, value);
+        }
+    }
     void postOrderHelper(NodePtr node)
     {
         if (node != TNULL)
@@ -127,11 +95,12 @@ private:
     }
     NodePtr searchTreeHelper(NodePtr node, char *key)
     {
-        if (node == TNULL || sse42_strcmp(key, node->data) == 0)
+        // printf("Insearh *%s* *%s*\n",node->data,key);
+        if (node == TNULL || strcmp(key, node->data) == 0)
         {
             return node;
         }
-        if (sse42_strcmp(key, node->data) < 0)
+        if (strcmp(key, node->data) < 0)
         {
             return searchTreeHelper(node->left, key);
         }
@@ -139,7 +108,6 @@ private:
     }
     NodePtr getTreeHelper(NodePtr node, int N)
     {
-        // printf("N = %d left = %d right = %d\n",N,node->leftNo,node->rightNo);
         if (node == TNULL || ((node->leftNo + 1) == N))
         {
             return node;
@@ -249,11 +217,11 @@ private:
         NodePtr x, y;
         while (node != TNULL)
         {
-            if (sse42_strcmp(node->data, key) == 0)
+            if (strcmp(node->data, key) == 0)
             {
                 z = node;
             }
-            if (sse42_strcmp(node->data, key) <= 0)
+            if (strcmp(node->data, key) <= 0)
             {
                 node = node->right;
             }
@@ -264,7 +232,6 @@ private:
         }
         if (z == TNULL)
         {
-            // cout << "Key not found in the tree" << endl;
             return NULL;
         }
         y = z;
@@ -369,6 +336,97 @@ private:
             }
         }
     }
+    void swapvalues(NodePtr u, NodePtr v)
+    {
+        char *temp;
+        char *temp1;
+        temp1 = new char[257];
+        temp = new char[257];
+        strcpy(temp, u->data);
+        strcpy(u->data, v->data);
+        strcpy(v->data, temp);
+        strcpy(temp1, u->value);
+        strcpy(u->value, v->value);
+        strcpy(v->value, temp1);
+    }
+    bool deleteNode(NodePtr node, char *key, int index1, int index2)
+    {
+        NodePtr v = searchTreeHelper(node, key);
+        if (v != TNULL)
+        {
+            NodePtr u = rbreplace(v);
+            bool uv = ((u == TNULL or u->color == 0) and (v->color == 0));
+            NodePtr parent = v->parent;
+            if (u == TNULL)
+            {
+                if (v == node)
+                {
+                    node = TNULL;
+                }
+                else
+                {
+                    if (uv)
+                    {
+                        fixdoubleblack(v, index1, index2);
+                    }
+                    else
+                    {
+                        if (sibling(v) != TNULL)
+                        {
+                            sibling(v)->color = 1;
+                        }
+                    }
+                    if (isonleft(v))
+                    {
+                        parent->left = TNULL;
+                    }
+                    else
+                    {
+                        parent->right = TNULL;
+                    }
+                }
+                delete v;
+                return true;
+            }
+            if (v->left == TNULL or v->right == TNULL)
+            {
+                if (v == node)
+                {
+                    strncpy(v->data, u->data,u->key_size);
+                    v->left = v->right = TNULL;
+                    delete u;
+                }
+                else
+                {
+                    if (isonleft(v))
+                    {
+                        parent->left = u;
+                    }
+                    else
+                    {
+                        parent->right = u;
+                    }
+                    delete v;
+                    u->parent = parent;
+                    if (uv)
+                    {
+                        fixdoubleblack(u, index1, index2);
+                    }
+                    else
+                    {
+                        u->color = 0;
+                    }
+                }
+                return true;
+            }
+            swapvalues(u, v);
+            deleteNode(node, key, index1, index2);
+        }
+        else
+        {
+            return false;
+        }
+    }
     bool deleteNodeHelper(NodePtr node, char *key, int index1, int index2)
     {
         NodePtr z = TNULL;
@@ -376,14 +434,23 @@ private:
         NodePtr temp = searchTreeHelper(node, key);
         if (temp != TNULL)
         {
+            pthread_mutex_lock(&mutex_no);
+            // printf("no lock acquired\n");
+
+            no_of_element[index1]--;
+
+            pthread_mutex_unlock(&mutex_no);
+            // printf("no lock given\n");
+
+
             while (node != TNULL)
             {
-                if (sse42_strcmp(node->data, key) == 0)
+                if (strcmp(node->data, key) == 0)
                 {
                     z = node;
                     break;
                 }
-                if (sse42_strcmp(node->data, key) < 0)
+                if (strcmp(node->data, key) < 0)
                 {
                     node->rightNo -= 1;
                     node = node->right;
@@ -396,23 +463,19 @@ private:
             }
             while (node != TNULL)
             {
-                if (sse42_strcmp(node->data, key) == 0)
+                if (strcmp(node->data, key) == 0)
                 {
                     z = node;
-                    // break;
                 }
-                if (sse42_strcmp(node->data, key) <= 0)
+                if (strcmp(node->data, key) <= 0)
                 {
-                    // node->rightNo -= 1;
                     node = node->right;
                 }
                 else
                 {
-                    // node->leftNo -= 1;
                     node = node->left;
                 }
             }
-            // node = TNULL;
             if (z == TNULL)
             {
                 return false;
@@ -457,7 +520,6 @@ private:
 
                 deleteFix(x, index1, index2);
             }
-            // printTree(index1,index2);
             return true;
         }
         else
@@ -542,8 +604,9 @@ private:
             printHelper(root->right, indent, true);
         }
     }
+
 public:
-    kvStore()
+    kvStore(int n)
     {
         TNULL = new Node;
         TNULL->color = 0;
@@ -556,7 +619,32 @@ public:
                 root[i][j] = TNULL;
             }
         }
-        // root = TNULL;
+
+        //init mutex locks
+        pthread_mutex_init(&mutex_global, NULL);
+
+        if (pthread_mutex_init(&mutex_no, NULL))
+        {
+            printf("error initiating mutex locks\n");
+            exit(1);
+        }
+
+        for (int i = 0; i < 52; i++)
+        {
+
+            for (int j = 0; j < 53; j++)
+            {
+                if (pthread_mutex_init(&mutex[i][j], NULL))
+                {
+                    printf("error initiating mutex locks\n");
+                    exit(1);
+                }
+            }
+        }
+        for (int i = 0; i < 53; i++)
+        {
+            no_of_element[i] = 0;
+        }
     }
     NodePtr succ(NodePtr x)
     {
@@ -666,18 +754,11 @@ public:
     }
     bool put(Slice &key, Slice &value)
     {
-        // for (int i = 0; i < 52; i++)
-        // {
-        //     if(root[i][0]!=TNULL)
-        //     {
-        //         printf("Not null %d\n",i);
-        //     }
-        // }
+        // pthread_mutex_lock(&mutex_global);
 
         int index1, index2;
-        if (key.data[1] != '\0')
+        if (key.size != 1)
         {
-            // printf("Not null\n");
             index1 = code(key.data[0]);
             index2 = code(key.data[1]) + 1;
         }
@@ -686,14 +767,36 @@ public:
             index1 = code(key.data[0]);
             index2 = 0;
         }
-        NodePtr temp = searchTreeHelper(this->root[index1][index2], key.data);
+        if (index1 < 0 || index2 < 0)
+        {
+            // cout << "index error" << endl;
+            // pthread_mutex_unlock(&mutex_global);
+
+            return false;
+        }
+        char * key1 = (char *)(malloc(key.size+1));
+        strncpy(key1,key.data,key.size);
+        key1[key.size]=0;
+        pthread_mutex_lock(&mutex[index1][index2]);
+        NodePtr temp = searchTreeHelper(this->root[index1][index2], key1);
         if (temp == TNULL)
         {
-            // printf("%d %d\n",index1,index2);
             NodePtr node = new Node;
+            pthread_mutex_lock(&mutex_no);
+            // printf("no lock acquired in put\n");
+
+            no_of_element[index1]++;
+            pthread_mutex_unlock(&mutex_no);
+            // printf("no lock given in put\n");
+
             node->parent = nullptr;
-            strcpy(node->data, key.data);
-            strcpy(node->value, value.data);
+            strncpy(node->data, key.data,key.size);
+            strncpy(node->value, value.data,value.size);
+            node->data[key.size]=0;
+            node->value[value.size]=0;
+            node->key_size=key.size;
+            node->value_size=value.size;
+
             node->left = TNULL;
             node->right = TNULL;
             node->color = 1;
@@ -704,7 +807,7 @@ public:
             while (x != TNULL)
             {
                 y = x;
-                if (sse42_strcmp(node->data, x->data) < 0)
+                if (strcmp(node->data, x->data) < 0)
                 {
                     x->leftNo += 1;
                     x = x->left;
@@ -720,7 +823,7 @@ public:
             {
                 root[index1][index2] = node;
             }
-            else if (sse42_strcmp(node->data, y->data) < 0)
+            else if (strcmp(node->data, y->data) < 0)
             {
                 y->left = node;
             }
@@ -732,27 +835,39 @@ public:
             if (node->parent == nullptr)
             {
                 node->color = 0;
-                // printTree(index1, index2);
 
+                pthread_mutex_unlock(&mutex[index1][index2]);
+                // pthread_mutex_unlock(&mutex_global);
+                free(key1);
                 return false;
             }
             if (node->parent->parent == nullptr)
             {
-                // printTree(index1, index2);
 
+                pthread_mutex_unlock(&mutex[index1][index2]);
+                // pthread_mutex_unlock(&mutex_global);
+                free(key1);
                 return false;
             }
             insertFix(node, index1, index2);
-            // printTree(index1, index2);
 
+            pthread_mutex_unlock(&mutex[index1][index2]);
+            // pthread_mutex_unlock(&mutex_global);
+            free(key1);
             return false;
         }
         else
         {
             NodePtr node = new Node;
             node->parent = nullptr;
-            strcpy(node->data, key.data);
-            strcpy(node->value, value.data);
+            strncpy(node->data, key.data,key.size);
+            strncpy(node->value, value.data,value.size);
+            node->data[key.size]=0;
+            node->value[value.size]=0;
+
+            node->key_size=key.size;
+            node->value_size=value.size;
+
             node->left = TNULL;
             node->right = TNULL;
             node->color = 1;
@@ -763,14 +878,18 @@ public:
             while (x != TNULL)
             {
                 y = x;
-                if (sse42_strcmp(node->data, x->data) < 0)
+                if (strcmp(node->data, x->data) < 0)
                 {
                     x = x->left;
                 }
-                else if (sse42_strcmp(node->data, x->data) == 0)
+                else if (strcmp(node->data, x->data) == 0)
                 {
-                    strcpy(y->value, value.data);
-                    // printTree(index1, index2);
+                    strncpy(y->value, value.data,value.size);
+                    y->value_size=value.size;
+                    y->value[value.size]=0;
+                    pthread_mutex_unlock(&mutex[index1][index2]);
+                    // pthread_mutex_unlock(&mutex_global);
+                    free(key1);
                     return true;
                 }
                 else
@@ -778,45 +897,97 @@ public:
                     x = x->right;
                 }
             }
+            pthread_mutex_unlock(&mutex[index1][index2]);
+            // pthread_mutex_unlock(&mutex_global);
+            free(key1);
             return false;
         }
     }
 
     bool del(Slice &data)
     {
+        char * key1 = (char *) malloc(data.size+1);
+        strncpy(key1,data.data,data.size);
+        key1[data.size]=0;
+        // pthread_mutex_lock(&mutex_global);
+
         int index1, index2;
-        if (data.data[1] != '\0')
+        if (key1[1] != '\0')
         {
-            index1 = code(data.data[0]);
-            index2 = code(data.data[1]) + 1;
+            index1 = code(key1[0]);
+            index2 = code(key1[1]) + 1;
         }
         else
         {
-            index1 = code(data.data[0]);
+            index1 = code(key1[0]);
             index2 = 0;
         }
-        // bool val = deleteNode(this->root[index1][index2], data.data, index1, index2);
-        // printTree(index1, index2);
-        // return val;
-        return deleteNodeHelper(this->root[index1][index2], data.data, index1, index2);
+
+        if (index1 < 0 || index2 < 0)
+        {
+            // cout << "index error" << endl;
+            // pthread_mutex_unlock(&mutex_global);
+            free(key1);    
+            return false;
+        }
+        pthread_mutex_lock(&mutex_global);
+        pthread_mutex_lock(&mutex[index1][index2]);
+        // printf("Index 1 %d index 2 %d for key: %s\n",index1,index2,data.data);
+        bool ret = deleteNodeHelper(this->root[index1][index2],key1, index1, index2);
+        pthread_mutex_unlock(&mutex[index1][index2]);
+
+        pthread_mutex_unlock(&mutex_global);
+
+        // pthread_mutex_unlock(&mutex_global);
+        free(key1);        
+        return ret;
     }
     bool get(Slice &key, Slice &value)
     {
+        char *key1 = (char *)malloc((key.size+1)*(sizeof(char)));
+        strncpy(key1,key.data,key.size);
+        key1[key.size]=0;
+        //  malloc()
+        // pthread_mutex_lock(&mutex_global);
+
         int index1, index2;
-        if (key.data[1] != '\0')
+        if (key1[1] != '\0')
         {
-            index1 = code(key.data[0]);
-            index2 = code(key.data[1]) + 1;
+            index1 = code(key1[0]);
+            index2 = code(key1[1]) + 1;
         }
         else
         {
-            index1 = code(key.data[0]);
+            index1 = code(key1[0]);
             index2 = 0;
         }
-        NodePtr temp = searchTreeHelper(this->root[index1][index2], key.data);
-        if (temp == TNULL)
+
+        if (index1 < 0 || index2 < 0)
+        {
+            // cout << "index error" << endl;
+            // pthread_mutex_unlock(&mutex_global);
+            free(key1);
             return false;
+        }
+        pthread_mutex_lock(&mutex[index1][index2]);
+        // printf("Index 1 %d index 2 %d for key: *%s* *%s*\n",index1,index2,key.data,key1);
+        NodePtr temp = searchTreeHelper(this->root[index1][index2], key1);
+        if (temp == TNULL)
+        {
+            pthread_mutex_unlock(&mutex[index1][index2]);
+
+            // pthread_mutex_unlock(&mutex_global);
+            free(key1);
+            return false;
+        }
+        value.data=(char *)malloc(temp->value_size+1);
         value.data = temp->value;
+        value.size = temp->value_size;
+        // printf("%d supplied %d noded\n",value.size,temp->value_size);
+        pthread_mutex_unlock(&mutex[index1][index2]);
+
+        // pthread_mutex_unlock(&mutex_global);
+        free(key1);
         return true;
     }
     void printTree(int index1, int index2)
@@ -828,98 +999,89 @@ public:
     }
     bool get(int N1, Slice &key, Slice &value)
     {
-        int N = N1;
-        int index1;
-        int index2;
+
+        // pthread_mutex_lock(&mutex_global);
+
+        int N = N1+1;
+        int index1 = 0;
+        int index2 = 0;
         bool flag = false;
         for (int i = 0; i < 52; i++)
         {
-            for (int j = 0; j < 53; j++)
+            pthread_mutex_lock(&mutex_no);
+
+            int number = no_of_element[i];
+
+            pthread_mutex_unlock(&mutex_no);
+
+            if (N - number <= 0)
             {
-                int number = 0;
-                if (this->root[i][j] != TNULL && this->root[i][j]->data[0] != '\0')
-                {
-                    // printf("i=%d j=%d\n",i,j);
-                    number = this->root[i][j]->leftNo + this->root[i][j]->rightNo + 1;
-                }
                 index1 = i;
-                index2 = j;
-                if (N - number <= 0)
-                {
-                    flag = true;
-                    break;
-                }
-                N -= number;
-            }
-            if (flag == true)
-            {
                 break;
             }
+            N -= number;
         }
+        for (int j = 0; j < 53; j++)
+        {
+            pthread_mutex_lock(&mutex[index1][j]);
+
+            int number = 0;
+            if (this->root[index1][j] != TNULL && this->root[index1][j]->data[0] != '\0')
+            {
+                number = this->root[index1][j]->leftNo + this->root[index1][j]->rightNo + 1;
+            }
+
+            pthread_mutex_unlock(&mutex[index1][j]);
+
+            index2 = j;
+            if (N - number <= 0)
+            {
+                flag = true;
+                break;
+            }
+            N -= number;
+        }
+        // printf("Index1 Index2 %d %d \n",index1,index2);
         if (flag == false)
         {
+            // pthread_mutex_unlock(&mutex_global);    
             return false;
         }
-        // remaining error handling
-        //
-        // pair<char *, char *> *val = getNHelper(this->root[index1][index2], N);
+
+        if (index1 < 0 || index2 < 0)
+        {
+            // cout << "index error" << endl;
+            // pthread_mutex_unlock(&mutex_global);
+            return false;
+        }
+        pthread_mutex_lock(&mutex[index1][index2]);
         NodePtr node = getTreeHelper(this->root[index1][index2], N);
-        // int *k = new int;
-        // *k = 0;
-        // inOrderHelper(this->root[index1][index2], k, N, key.data, value.data);
-        // return true;
+
         if (node)
         {
-            strcpy(key.data, node->data);
-            strcpy(value.data, node->value);
+            key.size=node->key_size;
+            value.size=node->value_size;
+            key.data=(char *)(malloc(1+ key.size));
+            value.data=(char*)(malloc(1+value.size));
+            strncpy(key.data, node->data,key.size);
+            strncpy(value.data, node->value,value.size);
+
+            
+            pthread_mutex_unlock(&mutex[index1][index2]);
+            // pthread_mutex_unlock(&mutex_global);
             return true;
         }
 
-        // key->size = strlen(node->data);
-        // value->size = strlen(node->value);
-
+        pthread_mutex_unlock(&mutex[index1][index2]);
+        // pthread_mutex_unlock(&mutex_global);
         return false;
     }
     bool del(int N)
     {
-
-        // int index1;
-        // int index2;
-        // bool flag = false;
-
-        // for (int i = 0; i < 52; i++)
-        // {
-        //     for (int j = 0; j < 53; j++)
-        //     {
-        //         int number = 0;
-        //         if (root[i][j] != TNULL)
-        //         {
-        //             number = root[i][j]->leftNo + root[i][j]->rightNo + 1;
-        //         }
-        //         index1 = i;
-        //         index2 = j;
-        //         if (N - number <= 0)
-        //         {
-        //             flag = true;
-        //             break;
-        //         }
-        //         N -= number;
-        //     }
-        //     if (flag == true)
-        //     {
-        //         break;
-        //     }
-        // }
-
-        // if (flag == false)
-        // {
-        //     return false;
-        // }
-
         Slice *key = new Slice;
         Slice *value = new Slice;
-        key->data = new char[68];
-        value->data = new char[260];
+        // key->data = new char[68];
+        // value->data = new char[260];
         if (get(N, *key, *value) == true)
         {
             return del(*key);
@@ -933,10 +1095,29 @@ public:
         {
             return (val - 65);
         }
-        else
+        else if (val > 96 && val < 123)
         {
             return (val - 97) + 26;
         }
+        else
+        {
+            // since for index2 we add 1 to the return value
+            return -2;
+        }
+    }
+
+    void debug()
+    {
+        // for (int i = 0; i < 52; i++)
+        // {
+            int i = 0;
+            for (int j = 0; j < 53; j++)
+            {    
+                cout << i << ' ' << j << endl;
+                printTree(i, j);
+            }
+            cout << endl;
+        // }
     }
 };
 // int main()
@@ -982,7 +1163,7 @@ public:
 //     {
 //         scanf("%s", op);
 
-//         if (sse42_strcmp(op, "put") == 0)
+//         if (strcmp(op, "put") == 0)
 //         {
 //             scanf("%s", a->data);
 //             scanf("%s", b->data);
@@ -990,7 +1171,7 @@ public:
 //             bool ret = kv.put(*a, *b);
 //             printf("ret - %d\n", ret);
 //         }
-//         else if (sse42_strcmp(op, "get") == 0)
+//         else if (strcmp(op, "get") == 0)
 //         {
 //             scanf("%s", a->data);
 //             bool ret = kv.get(*a, *b);
@@ -1001,7 +1182,7 @@ public:
 //             else
 //                 printf("ret - %d\tval - %s\n", ret, b->data);
 //         }
-//         else if (sse42_strcmp(op, "getn") == 0)
+//         else if (strcmp(op, "getn") == 0)
 //         {
 //             int index;
 //             scanf("%d", &index);
@@ -1011,20 +1192,20 @@ public:
 //             else
 //                 printf("ret - %d\tkey - %s\tval - %s\n", ret, a->data, b->data);
 //         }
-//         else if (sse42_strcmp(op, "del") == 0)
+//         else if (strcmp(op, "del") == 0)
 //         {
 //             scanf("%s", a->data);
 //             bool ret = kv.del(*a);
 //             printf("ret - %d\n", ret);
 //         }
-//         else if (sse42_strcmp(op, "deln") == 0)
+//         else if (strcmp(op, "deln") == 0)
 //         {
 //             int index;
 //             scanf("%d", &index);
 //             bool ret = kv.del(index);
 //             printf("ret - %d\n", ret);
 //         }
-//         else if (sse42_strcmp(op, "exit") == 0)
+//         else if (strcmp(op, "exit") == 0)
 //         {
 //             break;
 //         }
