@@ -128,7 +128,7 @@ int main()
 
 	long double putt = 0;
 
-	int vall = 1e4;
+	int vall = 1e5;
 
 	for(int i=0;i<vall;i++)
 	{
@@ -152,10 +152,10 @@ int main()
 
 	bool incorrect = false;
 
-	for(int i=0;i<10000;i++)
+	for(int i=0;i<100000;i++)
 	{
 		int x = rand()%5;
-
+		printf("%d\n",i);
 		if(x==0)
 		{
 			string key = random_key(rand()%64 + 1);
@@ -260,6 +260,7 @@ int main()
 
 		}
 	}
+	return 0;
 	if(incorrect == true)
 	{
 		cout<<0<<endl;
