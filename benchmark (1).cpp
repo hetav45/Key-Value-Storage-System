@@ -2,7 +2,8 @@
 #include <unistd.h> 
 #include <pthread.h>
 #include <time.h>
-#include "rbnew_52+52.cpp"
+#include "kvStore.cpp"
+
 using namespace std;
 
 string sliceToStr(Slice& a) {
@@ -25,8 +26,10 @@ string random_key(int stringLength){
 	string letters = "";
 	for(char i = 'a';i<='z';i++)letters+=i;
 	for(char i = 'A';i<='Z';i++)letters+=i;
-	for(int i=0;i<stringLength;i++)
-		k = k + letters[rand()%52];
+	for(int i=0;i<stringLength-1;i++)
+		k = k + letters[(rand()%52+rand()%10)%52];
+
+	k = k + '\n';
 
 	return k;
 }
@@ -36,29 +39,29 @@ string random_value(int stringLength){
 	string letters = "";
 	for(int i = 32;i<127;i++)letters+=char(i);
 
-	for(int i=0;i<stringLength;i++)
-		v = v + letters[rand()%96];
+	for(int i=0;i<stringLength-1;i++)
+		v = v + letters[rand()%95];
+	v = v + '\n';
 
 	return v;
 }
 
-long CLOCKS_PER_SECOND = 1000000;
 kvStore kv(10000000);
 map<string,string> db;
 long long db_size = 0;
 
 void *myThreadFun(void *vargp) 
 { 
-	int transactions=0;
-	clock_t start = clock();
-	int time = 10;
-	clock_t tt = clock();
-	while((float(tt-start)/CLOCKS_PER_SECOND)<=time)
+	long long int transactions=0;
+	time_t start,end;
+	int limit = 10;
+	time(&start);
+	time(&end);
+	while((end-start) < limit)
 	{
-
+		transactions+=1000;
 		for(int i=0;i<10000;i++)
 		{
-			transactions+=1;
 			int x = rand()%5;
 			if(x==0)
 			{
@@ -111,25 +114,40 @@ void *myThreadFun(void *vargp)
 				db_size--;
 			}
 		}
-		tt=clock();
+		time(&end);
 	}
-	cout<<transactions/time<<endl;
+	cout<<"TRANSACTIONS PER SEC = "<<transactions/limit<<endl;
 	return NULL;  
 } 
 
 int main()
 {
-	for(int i=0;i<100000;i++)
+	int put_enteries = 100000;
+	time_t start_p,end_p;
+	float put_time = 0;
+	vector<Slice> keys;
+	vector<Slice> values;
+	for(int i=0;i<put_enteries;i++)
 	{
-		string key = random_key(rand()%64 + 1);
-		string value = random_value(rand()%255 + 1);
+		string key = random_key(rand()%63 + 1);
+		string value = random_value(rand()%254 + 1);
+		// printf("key is *%S*\n",key);
+		cout<<"Key is *"<<key<<"*"<<endl;
 		db[key] = value;
 		Slice k,v;
 		strToSlice(key,k);
 		strToSlice(value,v);
-		kv.put(k,v);
+		keys.push_back(k);
+		values.push_back(v);
 		db_size = db.size();
 	}
+
+	time(&start_p);
+	for(int i=0;i<put_enteries;i++)
+		kv.put(keys[i],values[i]);
+	time(&end_p);
+
+	cout<<"TIME FOR PUTTING "<<put_enteries<<" ENTERIES = "<<setprecision(9)<<(end_p-start_p)<<" SEC "<<endl;
 
 	bool incorrect = false;
 
@@ -145,6 +163,12 @@ int main()
 			map<string,string>:: iterator itr = db.find(key);
 			if((ans==false && itr != db.end()) || (ans==true && itr->second != sliceToStr(s_value) ))
 				incorrect = true;
+				if(incorrect == true)
+					{
+						printf("wrong %d\n",x);
+						sleep(1000);
+						break;
+					}
 		}
 		else if(x==1)
 		{
@@ -163,6 +187,12 @@ int main()
 			db_size = db.size();
 			if(check2 == false || value != sliceToStr(check))
 				incorrect = true;
+				if(incorrect == true)
+					{
+						printf("wrong %d\n",x);
+						sleep(1000);
+						break;
+					}
 		}
 		else if(x==2)
 		{
@@ -179,6 +209,12 @@ int main()
 			bool check2 = kv.get(s_key,s_value);
 			if(check2 == true)
 				incorrect = true;
+				if(incorrect == true)
+					{
+						printf("wrong %d\n",x);
+						sleep(1000);
+						break;
+					}
 		}
 		else if(x==3)
 		{
@@ -189,6 +225,12 @@ int main()
 			for(int i=0;i<rem;i++)itr++;
 			if( itr->first != sliceToStr(s_key) || itr->second != sliceToStr(s_value))
 				incorrect = true;
+				if(incorrect == true)
+					{
+						printf("wrong %d\n",x);
+						sleep(1000);
+						break;
+					}
 		}
 		else if(x==4)
 		{
@@ -204,13 +246,21 @@ int main()
 			bool check2 = kv.get(s_key,s_value);
 			if(check2 == true)
 				incorrect = true;
+				if(incorrect == true)
+					{
+						printf("wrong %d\n",x);
+						sleep(1000);
+						break;
+					}
 		}
 	}
 	if(incorrect == true)
 	{
-		cout<<0<<endl;
+		cout<<"INCORRECT OUTPUT"<<endl;
 		return 0;
 	}
+	else
+		cout<<"CORRECT OUTPUT"<<endl;
 	int threads = 4;
 
 	pthread_t tid[threads];

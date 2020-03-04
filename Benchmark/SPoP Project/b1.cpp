@@ -147,131 +147,131 @@ int main()
 		putt += en1 - st1;
 		db_size = db.size();
 	}
-
+	// return 0;
 	printf("%d put calls time = %Lf\n",vall,putt);
 	// return 0;
 	bool incorrect = false;
 
-	for(int i=0;i<0;i++)
-	{
-		int x = rand()%5;
-		printf("%d\n",i);
-		// // x=1;
-		// if(x==0)
-		// 	x=1;
-		// else x=2;
+	// for(int i=0;i<100000;i++)
+	// {
+	// 	int x = rand()%5;
+	// 	// printf("%d\n",i);
+	// 	// // x=1;
+	// 	// if(x==0)
+	// 	// 	x=1;
+	// 	// else x=2;
 
-		if(x==0)
-		{
-			string key = random_key(rand()%64 + 1);
-			Slice s_key,s_value;
-			strToSlice(key,s_key);
-			bool ans = kv.get(s_key,s_value);
-			map<string,string>:: iterator itr = db.find(key);
-			if((ans==false && itr != db.end()) || (ans==true && itr->second != sliceToStr(s_value) ))
-				incorrect = true;
-				if(incorrect == true)
-					{
-						printf("wrong %d\n",x);
-						sleep(1000);
-						break;
-					}
-		}
-		else if(x==1)
-		{
-			int k = rand()%64 + 1;
-			int v = rand()%255 + 1;
-			string key = random_key(k);
-			string value = random_value(v);
-			db[key] = value;
-			Slice s_key,s_value;
-			strToSlice(key,s_key);
-			strToSlice(value,s_value);
-			bool ans = kv.put(s_key,s_value);
+	// 	if(x==0)
+	// 	{
+	// 		string key = random_key(rand()%64 + 1);
+	// 		Slice s_key,s_value;
+	// 		strToSlice(key,s_key);
+	// 		bool ans = kv.get(s_key,s_value);
+	// 		map<string,string>:: iterator itr = db.find(key);
+	// 		if((ans==false && itr != db.end()) || (ans==true && itr->second != sliceToStr(s_value) ))
+	// 			incorrect = true;
+	// 			if(incorrect == true)
+	// 				{
+	// 					printf("wrong %d\n",x);
+	// 					sleep(1000);
+	// 					break;
+	// 				}
+	// 	}
+	// 	else if(x==1)
+	// 	{
+	// 		int k = rand()%64 + 1;
+	// 		int v = rand()%255 + 1;
+	// 		string key = random_key(k);
+	// 		string value = random_value(v);
+	// 		db[key] = value;
+	// 		Slice s_key,s_value;
+	// 		strToSlice(key,s_key);
+	// 		strToSlice(value,s_value);
+	// 		bool ans = kv.put(s_key,s_value);
 
-			Slice check;
-			bool check2 = kv.get(s_key,check);
-			db_size = db.size();
-			if(check2 == false || value != sliceToStr(check))
-				incorrect = true;
-				if(incorrect == true)
-					{
-						printf("wrong  %d\n",x);
-						sleep(1000);
-						break;
-					}
-		}
-		else if(x==2)
-		{
-			int rem = rand()%db_size;
-			map<string,string>:: iterator itr = db.begin();
-			advance(itr,rem);
-			string key = itr->first;
-			Slice s_key,s_value;
-			strToSlice(key,s_key);
-			bool check = kv.del(s_key);
-			db.erase(itr);
-			db_size--;
+	// 		Slice check;
+	// 		bool check2 = kv.get(s_key,check);
+	// 		db_size = db.size();
+	// 		if(check2 == false || value != sliceToStr(check))
+	// 			incorrect = true;
+	// 			if(incorrect == true)
+	// 				{
+	// 					printf("wrong  %d\n",x);
+	// 					sleep(1000);
+	// 					break;
+	// 				}
+	// 	}
+	// 	else if(x==2)
+	// 	{
+	// 		int rem = rand()%db_size;
+	// 		map<string,string>:: iterator itr = db.begin();
+	// 		advance(itr,rem);
+	// 		string key = itr->first;
+	// 		Slice s_key,s_value;
+	// 		strToSlice(key,s_key);
+	// 		bool check = kv.del(s_key);
+	// 		db.erase(itr);
+	// 		db_size--;
 
-			bool check2 = kv.get(s_key,s_value);
-			if(check2 == true)
-				incorrect = true;
-				if(incorrect == true)
-					{
-						printf("wrong  %d\n",x);
-						sleep(1000);
-						break;
-					}
-		}
-		else if(x==3)
-		{
-			int rem = rand()%db_size;
-			Slice s_key,s_value;
-			bool check = kv.get(rem,s_key,s_value);
-			map<string,string>:: iterator itr = db.begin();
-			for(int i=0;i<rem;i++)itr++;
-			if( itr->first != sliceToStr(s_key) || itr->second != sliceToStr(s_value))
-				incorrect = true;
-				if(incorrect == true)
-					{
-						printf("wrong  %d\n",x);
-						sleep(1000);
-						break;
-					}
+	// 		bool check2 = kv.get(s_key,s_value);
+	// 		if(check2 == true)
+	// 			incorrect = true;
+	// 			if(incorrect == true)
+	// 				{
+	// 					printf("wrong  %d\n",x);
+	// 					sleep(1000);
+	// 					break;
+	// 				}
+	// 	}
+	// 	else if(x==3)
+	// 	{
+	// 		int rem = rand()%db_size;
+	// 		Slice s_key,s_value;
+	// 		bool check = kv.get(rem,s_key,s_value);
+	// 		map<string,string>:: iterator itr = db.begin();
+	// 		for(int i=0;i<rem;i++)itr++;
+	// 		if( itr->first != sliceToStr(s_key) || itr->second != sliceToStr(s_value))
+	// 			incorrect = true;
+	// 			if(incorrect == true)
+	// 				{
+	// 					printf("wrong  %d\n",x);
+	// 					sleep(1000);
+	// 					break;
+	// 				}
 
-		}
-		else if(x==4)
-		{
-			int rem = rand()%db_size;
-			map<string,string>:: iterator itr = db.begin();
-			for(int i=0;i<rem;i++)itr++;
-			string key = itr->first;
-			bool check = kv.del(rem);
-			db.erase(itr);
-			db_size--;
-			Slice s_key,s_value;
-			strToSlice(key,s_key);
-			bool check2 = kv.get(s_key,s_value);
-			if(check2 == true)
-				incorrect = true;
-				if(incorrect == true)
-					{
-						printf("wrong  %d\n",x);
-						sleep(1000);
-						break;
-					}
+	// 	}
+	// 	else if(x==4)
+	// 	{
+	// 		int rem = rand()%db_size;
+	// 		map<string,string>:: iterator itr = db.begin();
+	// 		for(int i=0;i<rem;i++)itr++;
+	// 		string key = itr->first;
+	// 		bool check = kv.del(rem);
+	// 		db.erase(itr);
+	// 		db_size--;
+	// 		Slice s_key,s_value;
+	// 		strToSlice(key,s_key);
+	// 		bool check2 = kv.get(s_key,s_value);
+	// 		if(check2 == true)
+	// 			incorrect = true;
+	// 			if(incorrect == true)
+	// 				{
+	// 					printf("wrong  %d\n",x);
+	// 					sleep(1000);
+	// 					break;
+	// 				}
 
-		}
-	}
+	// 	}
+	// }
 	// return 0;
-	if(incorrect == true)
-	{
-		cout<<0<<endl;
-		clock_gettime(CLOCK_MONOTONIC_RAW,&ts);
-		long double en=ts.tv_nsec/(1e9)+ts.tv_sec;
-		printf("Total Time = %Lf\n",en-st);
-		return 0;
-	}
+	// if(incorrect == true)
+	// {
+	// 	cout<<0<<endl;
+	// 	clock_gettime(CLOCK_MONOTONIC_RAW,&ts);
+	// 	long double en=ts.tv_nsec/(1e9)+ts.tv_sec;
+	// 	printf("Total Time = %Lf\n",en-st);
+	// 	return 0;
+	// }
 	int threads = 4;
 
 	pthread_t tid[threads];

@@ -606,7 +606,7 @@ private:
     }
 
 public:
-    kvStore()
+    kvStore(int n)
     {
         TNULL = new Node;
         TNULL->color = 0;
